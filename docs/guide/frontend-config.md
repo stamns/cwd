@@ -9,7 +9,7 @@
 在初始化 `CWDComments` 实例时，可以传入以下配置参数：
 
 ```html
-<script src="cwd-comments.js"></script>
+<script src="https://cwd-comments.zishu.me/cwd-comments.js"></script>
 ```
 
 ```html
