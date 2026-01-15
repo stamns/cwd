@@ -83,7 +83,7 @@ export const SettingsView = html`
 							<p class="text-xs text-gray-500 mt-1">设置后，文章链接将自动拼接此前缀</p>
 						</div>
 					</div>
-					<div class="flex justify-end mt-4">
+					<div class="flex mt-4">
 						<button @click="saveSettings" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">确认保存</button>
 					</div>
 				</main>
