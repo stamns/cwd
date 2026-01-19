@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import { UAParser } from 'ua-parser-js';
 import { Bindings } from '../../bindings';
-import { sendCommentNotification, sendCommentReplyNotification } from '../../utils/email';
+import { sendCommentNotification, sendCommentReplyNotification, isValidEmail } from '../../utils/email';
 
 // 检查内容，将<script>标签之间的内容删除
 export function checkContent(content: string): string {
@@ -25,6 +25,9 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
   }
   if (!email || typeof email !== 'string') {
     return c.json({ message: '邮箱不能为空' }, 400);
+  }
+  if (!isValidEmail(email)) {
+    return c.json({ message: '邮箱格式不正确' }, 400);
   }
   const userAgent = c.req.header('user-agent') || "";
   
@@ -122,7 +125,8 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
                 "SELECT created_at FROM EmailLog WHERE recipient = ? AND type = 'user-reply' ORDER BY created_at DESC LIMIT 1"
               ).bind(parentComment.email).first<{ created_at: string }>();
               const canSendUserMail = !recentUserMail || (Date.now() - new Date(recentUserMail.created_at).getTime() > 60 * 1000);
-              if (canSendUserMail) {
+              
+              if (canSendUserMail && isValidEmail(parentComment.email)) {
                 console.log('PostComment:mailDispatch:userReply:send', {
                   toEmail: parentComment.email,
                   toName: parentComment.author

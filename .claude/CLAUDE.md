@@ -62,14 +62,13 @@ src/
 
 ## 环境变量
 
-| 变量名 | 说明 | 必填 |
-|--------|------|------|
-| `ADMIN_NAME` | 管理员用户名 | 是 |
-| `ADMIN_PASSWORD` | 管理员密码 | 是 |
-| `ALLOW_ORIGIN` | CORS 白名单（逗号分隔） | 是 |
-| `RESEND_API_KEY` | Resend API 密钥 | 否 |
-| `RESEND_FROM_EMAIL` | 发件邮箱 | 否 |
-| `EMAIL_ADDRESS` | 站长接收邮箱 | 否 |
+| 变量名              | 说明            | 必填 |
+| ------------------- | --------------- | ---- |
+| `ADMIN_NAME`        | 管理员用户名    | 是   |
+| `ADMIN_PASSWORD`    | 管理员密码      | 是   |
+| `RESEND_API_KEY`    | Resend API 密钥 | 否   |
+| `RESEND_FROM_EMAIL` | 发件邮箱        | 否   |
+| `EMAIL_ADDRESS`     | 站长接收邮箱    | 否   |
 
 ## 本地开发
 

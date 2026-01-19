@@ -1,5 +1,9 @@
 import { Bindings } from '../bindings';
 
+export function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 /**
  * 回复通知邮件
  */
@@ -54,6 +58,11 @@ export async function sendCommentReplyNotification(
     throw new Error('未配置邮件发送绑定或发件人地址');
   }
 
+  if (!isValidEmail(toEmail)) {
+    console.warn('EmailReplyNotification:invalidRecipient', { toEmail });
+    return;
+  }
+
   await env.SEND_EMAIL.send({
     to: [{ email: toEmail }],
     from: { email: env.CF_FROM_EMAIL },
@@ -106,6 +115,11 @@ export async function sendCommentNotification(
     throw new Error('未配置邮件发送绑定或发件人地址');
   }
 
+  if (!isValidEmail(toEmail)) {
+    console.warn('EmailAdminNotification:invalidRecipient', { toEmail });
+    return;
+  }
+
   await env.SEND_EMAIL.send({
     to: [{ email: toEmail }],
     from: { email: env.CF_FROM_EMAIL },
@@ -125,18 +139,21 @@ async function getAdminNotifyEmail(env: Bindings): Promise<string> {
   const row = await env.CWD_DB.prepare('SELECT value FROM Settings WHERE key = ?')
     .bind('admin_notify_email')
     .first<{ value: string }>();
-  if (row?.value) {
+  if (row?.value && isValidEmail(row.value)) {
     console.log('EmailAdminNotification:useDbEmail', {
       email: row.value
     });
     return row.value;
   }
-  if (env.EMAIL_ADDRESS) {
+  if (env.EMAIL_ADDRESS && isValidEmail(env.EMAIL_ADDRESS)) {
     console.log('EmailAdminNotification:useEnvEmail', {
       email: env.EMAIL_ADDRESS
     });
     return env.EMAIL_ADDRESS;
   }
-  console.error('EmailAdminNotification:noAdminEmail');
-  throw new Error('未配置管理员通知邮箱');
+  console.error('EmailAdminNotification:noAdminEmail', {
+    dbValue: row?.value,
+    envValue: env.EMAIL_ADDRESS
+  });
+  throw new Error('未配置管理员通知邮箱或格式不正确');
 }

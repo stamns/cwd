@@ -1,6 +1,6 @@
 import { cors } from 'hono/cors'
 
-export const customCors = (_allowOriginStr: string | undefined) => {
+export const customCors = () => {
   return cors({
     origin: '*',
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

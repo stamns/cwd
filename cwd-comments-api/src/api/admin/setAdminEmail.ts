@@ -1,9 +1,6 @@
 import { Context } from 'hono';
 import { Bindings } from '../../bindings';
-
-function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+import { isValidEmail } from '../../utils/email';
 
 export const setAdminEmail = async (c: Context<{ Bindings: Bindings }>) => {
   try {
