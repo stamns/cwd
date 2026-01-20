@@ -9,7 +9,7 @@ export default {
 
     return h(Layout, null, {
       'doc-footer-before': () => h(FooterDoc),
+      'home-features-after': () => h(FooterDoc),
     })
   },
 }
-

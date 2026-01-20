@@ -1,5 +1,5 @@
 <template>
-  <div id="zcomments" ref="commentsRoot"></div>
+  <div id="comments" ref="commentsRoot"></div>
 </template>
 
 <script setup>
