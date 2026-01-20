@@ -84,6 +84,7 @@ export class CWDComments {
 				adminBadge: data.adminBadge || '',
 				adminEnabled: !!data.adminEnabled,
 				avatarPrefix: data.avatarPrefix || '',
+				allowedDomains: Array.isArray(data.allowedDomains) ? data.allowedDomains : [],
 			};
 		} catch (e) {
 			return {};
@@ -125,6 +126,28 @@ export class CWDComments {
 			if (!this._mounted) {
 				return;
 			}
+
+			// 检查域名限制
+			if (
+				serverConfig.allowedDomains &&
+				serverConfig.allowedDomains.length > 0 &&
+				typeof window !== 'undefined'
+			) {
+				const currentHostname = window.location.hostname;
+				const isAllowed = serverConfig.allowedDomains.some((domain) => {
+					return currentHostname === domain || currentHostname.endsWith('.' + domain);
+				});
+
+				if (!isAllowed) {
+					this.mountPoint.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #666; font-size: 14px; border: 1px solid #eee; border-radius: 8px; background: #f9f9f9;">
+              当前域名 (${currentHostname}) 未获得评论组件调用授权
+            </div>
+          `;
+					return;
+				}
+			}
+
 			if (serverConfig.avatarPrefix) {
 				this.config.avatarPrefix = serverConfig.avatarPrefix;
 			}

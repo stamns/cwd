@@ -10,14 +10,51 @@ export const importComments = async (c: Context<{ Bindings: Bindings }>) => {
 			return c.json({ message: '导入数据为空' }, 400);
 		}
 
-        // 映射 Twikoo 数据结构到 CWD 结构
-        const comments = rawComments.map((item: any) => {
-            // 简单的特征检测：如果有 href/nick/mail/comment 且没有 post_slug/name (或者我们优先尝试映射)
-            // 这里的判断标准：如果包含 Twikoo 特有的字段名，则进行映射
-            const isTwikoo = item.href !== undefined || item.nick !== undefined || item.comment !== undefined;
-            
-            if (isTwikoo) {
-                // 处理 ID: 如果 _id 是数字则保留，否则丢弃（让数据库自增）
+        // 映射 Twikoo / Artalk 数据结构到 CWD 结构
+		const comments = rawComments.map((item: any) => {
+			// Twikoo 特征检测
+			const isTwikoo =
+				item.href !== undefined || item.nick !== undefined || item.comment !== undefined;
+			// Artalk 特征检测 (page_key 是 Artalk 特有的)
+			const isArtalk = item.page_key !== undefined && item.content !== undefined;
+
+			if (isArtalk) {
+				// Artalk 映射逻辑
+				// 处理 ID: Artalk ID 通常是数字
+				let id = undefined;
+				if (typeof item.id === 'number') {
+					id = item.id;
+				} else if (typeof item.id === 'string' && /^\d+$/.test(item.id)) {
+					id = parseInt(item.id, 10);
+				}
+
+				// 处理时间
+				let created = Date.now();
+				if (item.created_at) {
+					created = new Date(item.created_at).getTime();
+				}
+
+				return {
+					id, // >>> id
+					created, // >>> created_at 转为时间戳
+					post_slug: item.page_key || '', // >>> page_key
+					name: item.nick || 'Anonymous', // >>> nick
+					email: item.email || '', // >>> email
+					url: item.link || null, // >>> link
+					ip_address: item.ip || null, // >>> ip
+					device: null, // >>> 保持空
+					os: null, // >>> 保持空
+					browser: null, // >>> 保持空
+					ua: item.ua || null, // >>> ua
+					content_text: item.content || '', // >>> content
+					content_html: item.content || '', // >>> content
+					parent_id: null, // >>> 保持 null
+					status: 'approved' // >>> 保持 "approved"
+				};
+			}
+
+			if (isTwikoo) {
+				// 处理 ID: 如果 _id 是数字则保留，否则丢弃（让数据库自增）
                 // Twikoo 的 _id 通常是 ObjectId 字符串，无法直接存入 INTEGER PRIMARY KEY
                 // 除非 _id 恰好是数字
                 let id = undefined;

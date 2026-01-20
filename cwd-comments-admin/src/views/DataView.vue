@@ -27,7 +27,8 @@
       <div class="form-group">
         <label class="form-label">来源系统</label>
         <select v-model="importSource" class="form-select">
-          <option value="twikoo">Twikoo</option>
+          <option value="twikoo">Twikoo (.json)</option>
+          <option value="artalk">Artalk (.json)</option>
         </select>
       </div>
 
@@ -188,8 +189,8 @@ async function handleFileChange(event: Event) {
       // 检测前缀逻辑
       let missingCount = 0;
       for (const item of comments) {
-        // 优先检查 Twikoo 字段 href，其次检查 CWD 字段 post_slug
-        const url = item.href || item.post_slug;
+        // 优先检查 Twikoo 字段 href，其次 Artalk 字段 page_key，最后 CWD 字段 post_slug
+        const url = item.href || item.page_key || item.post_slug;
         if (url && typeof url === "string") {
           if (!url.startsWith("http://") && !url.startsWith("https://")) {
             missingCount++;
@@ -247,6 +248,16 @@ async function confirmPrefix() {
     if (newItem.href && typeof newItem.href === "string") {
       if (!newItem.href.startsWith("http://") && !newItem.href.startsWith("https://")) {
         newItem.href = joinUrl(prefix, newItem.href);
+      }
+    }
+
+    // Artalk
+    if (newItem.page_key && typeof newItem.page_key === "string") {
+      if (
+        !newItem.page_key.startsWith("http://") &&
+        !newItem.page_key.startsWith("https://")
+      ) {
+        newItem.page_key = joinUrl(prefix, newItem.page_key);
       }
     }
 

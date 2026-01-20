@@ -31,6 +31,15 @@
           <label class="form-label">头像前缀（默认：https://gravatar.com/avatar）</label>
           <input v-model="avatarPrefix" class="form-input" type="text" />
         </div>
+        <div class="form-item">
+          <label class="form-label">允许调用的域名（多个域名用逗号分隔，留空则不限制）</label>
+          <textarea
+            v-model="allowedDomains"
+            class="form-input"
+            rows="3"
+            placeholder="例如: example.com, test.com"
+          ></textarea>
+        </div>
         <div class="card-actions">
           <button class="card-button" :disabled="savingComment" @click="saveComment">
             <span v-if="savingComment">保存中...</span>
@@ -134,6 +143,7 @@ const commentAdminEmail = ref("");
 const commentAdminBadge = ref("");
 const avatarPrefix = ref("");
 const commentAdminEnabled = ref(false);
+const allowedDomains = ref("");
 const savingEmail = ref(false);
 const testingEmail = ref(false);
 const savingComment = ref(false);
@@ -181,6 +191,7 @@ async function load() {
     commentAdminBadge.value = commentRes.adminBadge || "博主";
     avatarPrefix.value = commentRes.avatarPrefix || "";
     commentAdminEnabled.value = !!commentRes.adminEnabled;
+    allowedDomains.value = commentRes.allowedDomains ? commentRes.allowedDomains.join(", ") : "";
     emailGlobalEnabled.value = !!emailNotifyRes.globalEnabled;
     
     if (emailNotifyRes.smtp) {
@@ -287,6 +298,7 @@ async function saveComment() {
       adminBadge: commentAdminBadge.value,
       avatarPrefix: avatarPrefix.value,
       adminEnabled: commentAdminEnabled.value,
+      allowedDomains: allowedDomains.value.split(/[,，\n]/).map(d => d.trim()).filter(Boolean)
     });
     showToast(res.message || "保存成功", "success");
   } catch (e: any) {

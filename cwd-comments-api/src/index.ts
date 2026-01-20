@@ -27,6 +27,7 @@ const COMMENT_ADMIN_EMAIL_KEY = 'comment_admin_email';
 const COMMENT_ADMIN_BADGE_KEY = 'comment_admin_badge';
 const COMMENT_AVATAR_PREFIX_KEY = 'comment_avatar_prefix';
 const COMMENT_ADMIN_ENABLED_KEY = 'comment_admin_enabled';
+const COMMENT_ALLOWED_DOMAINS_KEY = 'comment_allowed_domains';
 
 async function loadCommentSettings(env: Bindings) {
 	await env.CWD_DB.prepare(
@@ -36,10 +37,11 @@ async function loadCommentSettings(env: Bindings) {
 		COMMENT_ADMIN_EMAIL_KEY,
 		COMMENT_ADMIN_BADGE_KEY,
 		COMMENT_AVATAR_PREFIX_KEY,
-		COMMENT_ADMIN_ENABLED_KEY
+		COMMENT_ADMIN_ENABLED_KEY,
+		COMMENT_ALLOWED_DOMAINS_KEY
 	];
 	const { results } = await env.CWD_DB.prepare(
-		'SELECT key, value FROM Settings WHERE key IN (?, ?, ?, ?)'
+		'SELECT key, value FROM Settings WHERE key IN (?, ?, ?, ?, ?)'
 	)
 		.bind(...keys)
 		.all<{ key: string; value: string }>();
@@ -54,11 +56,18 @@ async function loadCommentSettings(env: Bindings) {
 	const enabledRaw = map.get(COMMENT_ADMIN_ENABLED_KEY) ?? null;
 	const adminEnabled = enabledRaw === '1';
 
+	// 解析允许的域名列表
+	const allowedDomainsRaw = map.get(COMMENT_ALLOWED_DOMAINS_KEY) ?? '';
+	const allowedDomains = allowedDomainsRaw
+		? allowedDomainsRaw.split(',').map((d) => d.trim()).filter(Boolean)
+		: [];
+
 	return {
 		adminEmail: map.get(COMMENT_ADMIN_EMAIL_KEY) ?? null,
 		adminBadge: map.get(COMMENT_ADMIN_BADGE_KEY) ?? null,
 		avatarPrefix: map.get(COMMENT_AVATAR_PREFIX_KEY) ?? null,
-		adminEnabled
+		adminEnabled,
+		allowedDomains
 	};
 }
 
@@ -69,6 +78,7 @@ async function saveCommentSettings(
 		adminBadge?: string;
 		avatarPrefix?: string;
 		adminEnabled?: boolean;
+		allowedDomains?: string[];
 	}
 ) {
 	await env.CWD_DB.prepare(
@@ -87,6 +97,10 @@ async function saveCommentSettings(
 						? '1'
 						: '0'
 					: undefined
+		},
+		{
+			key: COMMENT_ALLOWED_DOMAINS_KEY,
+			value: settings.allowedDomains ? settings.allowedDomains.join(',') : undefined
 		}
 	];
 
@@ -198,6 +212,7 @@ app.put('/admin/settings/comments', async (c) => {
 		const rawAdminBadge = typeof body.adminBadge === 'string' ? body.adminBadge : '';
 		const rawAvatarPrefix = typeof body.avatarPrefix === 'string' ? body.avatarPrefix : '';
 		const rawAdminEnabled = body.adminEnabled;
+		const rawAllowedDomains = Array.isArray(body.allowedDomains) ? body.allowedDomains : [];
 
 		const adminEmail = rawAdminEmail.trim();
 		const adminBadge = rawAdminBadge.trim();
@@ -206,6 +221,9 @@ app.put('/admin/settings/comments', async (c) => {
 			typeof rawAdminEnabled === 'boolean'
 				? rawAdminEnabled
 				: rawAdminEnabled === '1' || rawAdminEnabled === 1;
+		const allowedDomains = rawAllowedDomains
+			.map((d: any) => (typeof d === 'string' ? d.trim() : ''))
+			.filter(Boolean);
 
 		if (adminEmail && !isValidEmail(adminEmail)) {
 			return c.json({ message: '邮箱格式不正确' }, 400);
@@ -215,7 +233,8 @@ app.put('/admin/settings/comments', async (c) => {
 			adminEmail,
 			adminBadge,
 			avatarPrefix,
-			adminEnabled
+			adminEnabled,
+			allowedDomains
 		});
 
 		return c.json({ message: '保存成功' });

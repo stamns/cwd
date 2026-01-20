@@ -39,6 +39,7 @@ export type CommentSettingsResponse = {
 	adminBadge: string | null;
 	avatarPrefix: string | null;
 	adminEnabled: boolean;
+	allowedDomains?: string[];
 };
 
 export type EmailNotifySettingsResponse = {
@@ -122,6 +123,7 @@ export function saveCommentSettings(data: {
 	adminBadge?: string;
 	avatarPrefix?: string;
 	adminEnabled?: boolean;
+	allowedDomains?: string[];
 }): Promise<{ message: string }> {
 	return put<{ message: string }>('/admin/settings/comments', data);
 }
