@@ -105,6 +105,7 @@ out
 # Nuxt.js build / generate output
 
 .nuxt
+dist
 
 # Gatsby files
 
@@ -171,5 +172,3 @@ package-lock.json
 wrangler.jsonc
 
 .claude
-
-cwd-comments-admin/dist
