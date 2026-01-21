@@ -281,7 +281,7 @@ export class CWDComments {
 		}
 
 		// 创建头部统计
-		let header = this.mountPoint.querySelector('.cwd-header');
+		let header = this.mountPoint.querySelector('.cwd-comments-header');
 		if (!header) {
 			header = document.createElement('div');
 			header.className = 'cwd-comments-header';
@@ -292,7 +292,7 @@ export class CWDComments {
       `;
 			this.mountPoint.appendChild(header);
 		}
-		const countEl = header.querySelector('.cwd-count-number');
+		const countEl = header.querySelector('.cwd-comments-count-number');
 		if (countEl) {
 			countEl.textContent = state.pagination.totalCount;
 		}
@@ -400,8 +400,8 @@ export class CWDComments {
 		}
 
 		// 更新头部统计
-		const header = this.mountPoint?.querySelector('.cwd-header');
-		const countEl = header?.querySelector('.cwd-count-number');
+		const header = this.mountPoint?.querySelector('.cwd-comments-header');
+		const countEl = header?.querySelector('.cwd-comments-count-number');
 		if (countEl) {
 			countEl.textContent = state.pagination.totalCount;
 		}
