@@ -111,6 +111,11 @@ export const getVisitOverview = async (
 			dailyMap.set(key, (dailyMap.get(key) || 0) + value);
 		}
 
+		if (dailyMap.size === 0 && totalPv > 0) {
+			const fallbackDate = now.toISOString().slice(0, 10);
+			dailyMap.set(fallbackDate, totalPv);
+		}
+
 		const last30Days: { date: string; total: number }[] = [];
 		for (let i = 29; i >= 0; i--) {
 			const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
