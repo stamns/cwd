@@ -25,10 +25,10 @@ export const updateComment = async (c: Context<{ Bindings: Bindings }>) => {
   }
 
   const existing = await c.env.CWD_DB.prepare(
-    'SELECT id, status, post_slug FROM Comment WHERE id = ?'
+    'SELECT id, status, post_slug, priority FROM Comment WHERE id = ?'
   )
     .bind(id)
-    .first<{ id: number; status: string; post_slug: string }>();
+    .first<{ id: number; status: string; post_slug: string; priority: number | null }>();
 
   if (!existing) {
     return c.json({ message: 'Comment not found' }, 404);
@@ -38,6 +38,7 @@ export const updateComment = async (c: Context<{ Bindings: Bindings }>) => {
   const rawEmail = typeof body.email === 'string' ? body.email : '';
   const rawUrl = typeof body.url === 'string' ? body.url : '';
   const rawStatus = typeof body.status === 'string' ? body.status : existing.status;
+  const rawPriority = body.priority;
   const hasPostSlugField =
     Object.prototype.hasOwnProperty.call(body, 'postSlug') ||
     Object.prototype.hasOwnProperty.call(body, 'post_slug');
@@ -62,6 +63,22 @@ export const updateComment = async (c: Context<{ Bindings: Bindings }>) => {
   const postSlug = hasPostSlugField
     ? (rawPostSlug.trim() || existing.post_slug)
     : existing.post_slug;
+
+  let priority: number = typeof existing.priority === 'number' && Number.isFinite(existing.priority)
+    ? existing.priority
+    : 1;
+
+  if (rawPriority !== undefined && rawPriority !== null) {
+    const parsed =
+      typeof rawPriority === 'number'
+        ? rawPriority
+        : typeof rawPriority === 'string' && rawPriority.trim()
+        ? Number.parseInt(rawPriority.trim(), 10)
+        : NaN;
+    if (Number.isFinite(parsed) && parsed >= 1) {
+      priority = parsed;
+    }
+  }
 
   if (!name) {
     return c.json({ message: '昵称不能为空' }, 400);
@@ -90,9 +107,9 @@ export const updateComment = async (c: Context<{ Bindings: Bindings }>) => {
   });
 
   const { success } = await c.env.CWD_DB.prepare(
-    'UPDATE Comment SET name = ?, email = ?, url = ?, content_text = ?, content_html = ?, status = ?, post_slug = ? WHERE id = ?'
+    'UPDATE Comment SET name = ?, email = ?, url = ?, content_text = ?, content_html = ?, status = ?, post_slug = ?, priority = ? WHERE id = ?'
   )
-    .bind(name, email, url, contentText, contentHtml, status, postSlug, id)
+    .bind(name, email, url, contentText, contentHtml, status, postSlug, priority, id)
     .run();
 
   if (!success) {

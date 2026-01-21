@@ -13,14 +13,13 @@ export const getComments = async (c: Context<{ Bindings: Bindings }>) => {
   if (!post_slug) return c.json({ message: "post_slug is required" }, 400)
 
   try {
-    // 1. 查询审核通过的评论
     const query = `
       SELECT id, name, email, url, content_text as contentText, 
              content_html as contentHtml, created, parent_id as parentId,
-             post_slug as postSlug
+             post_slug as postSlug, priority
       FROM Comment 
       WHERE post_slug = ? AND status = "approved"
-      ORDER BY created DESC
+      ORDER BY priority DESC, created DESC
     `
     const { results } = await c.env.CWD_DB.prepare(query).bind(post_slug).all()
 

@@ -18,6 +18,7 @@ export type CommentItem = {
 	contentText: string;
 	contentHtml: string;
 	status: string;
+	priority?: number;
 	ua?: string | null;
 };
 
@@ -118,6 +119,7 @@ export function updateComment(data: {
 	postSlug?: string;
 	contentText: string;
 	status?: string;
+	priority?: number;
 }): Promise<{ message: string }> {
 	return put<{ message: string }>('/admin/comments/update', {
 		id: data.id,
@@ -126,7 +128,8 @@ export function updateComment(data: {
 		url: data.url ?? null,
 		postSlug: data.postSlug,
 		content: data.contentText,
-		status: data.status
+		status: data.status,
+		priority: data.priority
 	});
 }
 

@@ -76,9 +76,14 @@
             >
           </div>
           <div class="table-cell table-cell-status">
-            <span class="cell-status" :class="`cell-status-${item.status}`">
-              {{ formatStatus(item.status) }}
-            </span>
+            <div class="cell-status-wrapper">
+              <span class="cell-status" :class="`cell-status-${item.status}`">
+                {{ formatStatus(item.status) }}
+              </span>
+              <span v-if="item.priority && item.priority > 1" class="cell-pin-flag">
+                置顶 {{ item.priority }}
+              </span>
+            </div>
           </div>
           <div class="table-cell table-cell-actions">
             <div class="table-actions">
@@ -176,7 +181,7 @@
         </div>
       </div>
     </div>
-    <div v-if="editVisible" class="modal-overlay" @click.self="closeEdit">
+    <div v-if="editVisible" class="modal-overlay">
       <div class="modal">
         <h3 class="modal-title">编辑评论</h3>
         <div v-if="editForm" class="modal-body">
@@ -211,6 +216,10 @@
               <option value="pending">待审核</option>
               <option value="rejected">已拒绝</option>
             </select>
+          </div>
+          <div class="form-item">
+            <label class="form-label">置顶权重（1 为不置顶，数值越大越靠前）</label>
+            <input v-model.number="editForm.priority" class="form-input" type="number" min="1" />
           </div>
         </div>
         <div class="modal-actions">
@@ -267,6 +276,7 @@ const editForm = ref<{
   postSlug: string;
   contentText: string;
   status: string;
+  priority: number;
 } | null>(null);
 
 const domainOptions = ref<string[]>([]);
@@ -443,6 +453,7 @@ function openEdit(item: CommentItem) {
     postSlug: item.postSlug || "",
     contentText: item.contentText,
     status: item.status,
+    priority: typeof item.priority === "number" && Number.isFinite(item.priority) ? item.priority : 1,
   };
   editVisible.value = true;
 }
@@ -465,6 +476,7 @@ async function submitEdit() {
   const trimmedContent = current.contentText.trim();
   const trimmedUrl = current.url.trim();
   const trimmedPostSlug = current.postSlug.trim();
+  const priorityValue = typeof current.priority === "number" && Number.isFinite(current.priority) ? current.priority : 1;
   const commentIndex = comments.value.findIndex((c) => c.id === current.id);
   const existingComment = commentIndex !== -1 ? comments.value[commentIndex] : null;
   const newPostSlug = trimmedPostSlug || existingComment?.postSlug || "";
@@ -483,6 +495,7 @@ async function submitEdit() {
       postSlug: newPostSlug,
       contentText: trimmedContent,
       status: current.status,
+      priority: priorityValue,
     });
     if (commentIndex !== -1) {
       comments.value[commentIndex] = {
@@ -493,6 +506,7 @@ async function submitEdit() {
         postSlug: newPostSlug,
         contentText: trimmedContent,
         status: current.status,
+        priority: priorityValue,
       };
     }
     closeEdit();
