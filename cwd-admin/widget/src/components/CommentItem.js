@@ -32,6 +32,7 @@ export class CommentItem extends Component {
 
 		render() {
     const { comment, isReply, adminEmail, adminBadge } = this.props;
+    const isPinned = typeof comment.priority === 'number' && comment.priority > 1;
     const isReplying = this.props.replyingTo === comment.id;
     const isAdmin = adminEmail && adminBadge && comment.email === adminEmail;
 
@@ -79,9 +80,11 @@ export class CommentItem extends Component {
                           ]
                         })
                       : this.createTextElement('span', comment.name, 'cwd-author-name'),
-                    // 博主标识
                     ...(isAdmin ? [
                       this.createTextElement('span', `${adminBadge}`, 'cwd-admin-badge')
+                    ] : []),
+                    ...(isPinned ? [
+                      this.createTextElement('span', '置顶', 'cwd-pin-badge')
                     ] : []),
                     // 显示回复目标
                     ...(comment.replyToAuthor ? [

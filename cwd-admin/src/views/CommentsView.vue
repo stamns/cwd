@@ -80,8 +80,12 @@
               <span class="cell-status" :class="`cell-status-${item.status}`">
                 {{ formatStatus(item.status) }}
               </span>
-              <span v-if="item.priority && item.priority > 1" class="cell-pin-flag">
-                置顶 {{ item.priority }}
+              <span
+                v-if="item.priority && item.priority > 1"
+                :title="item.priority"
+                class="cell-status cell-pin-flag"
+              >
+                置顶
               </span>
             </div>
           </div>
@@ -219,7 +223,12 @@
           </div>
           <div class="form-item">
             <label class="form-label">置顶权重（1 为不置顶，数值越大越靠前）</label>
-            <input v-model.number="editForm.priority" class="form-input" type="number" min="1" />
+            <input
+              v-model.number="editForm.priority"
+              class="form-input"
+              type="number"
+              min="1"
+            />
           </div>
         </div>
         <div class="modal-actions">
@@ -453,7 +462,10 @@ function openEdit(item: CommentItem) {
     postSlug: item.postSlug || "",
     contentText: item.contentText,
     status: item.status,
-    priority: typeof item.priority === "number" && Number.isFinite(item.priority) ? item.priority : 1,
+    priority:
+      typeof item.priority === "number" && Number.isFinite(item.priority)
+        ? item.priority
+        : 1,
   };
   editVisible.value = true;
 }
@@ -476,7 +488,10 @@ async function submitEdit() {
   const trimmedContent = current.contentText.trim();
   const trimmedUrl = current.url.trim();
   const trimmedPostSlug = current.postSlug.trim();
-  const priorityValue = typeof current.priority === "number" && Number.isFinite(current.priority) ? current.priority : 1;
+  const priorityValue =
+    typeof current.priority === "number" && Number.isFinite(current.priority)
+      ? current.priority
+      : 1;
   const commentIndex = comments.value.findIndex((c) => c.id === current.id);
   const existingComment = commentIndex !== -1 ? comments.value[commentIndex] : null;
   const newPostSlug = trimmedPostSlug || existingComment?.postSlug || "";
@@ -510,6 +525,7 @@ async function submitEdit() {
       };
     }
     closeEdit();
+    editVisible.value = false;
   } catch (e: any) {
     error.value = e.message || "更新评论失败";
   } finally {
@@ -538,7 +554,9 @@ onMounted(() => {
 
   fetchCommentStats()
     .then((res: CommentListResponse | any) => {
-      const domains = Array.isArray(res.domains) ? res.domains.map((item: any) => item.domain) : [];
+      const domains = Array.isArray(res.domains)
+        ? res.domains.map((item: any) => item.domain)
+        : [];
       domainOptions.value = Array.from(new Set(domains));
     })
     .catch(() => {
@@ -676,9 +694,8 @@ onMounted(() => {
 }
 
 .table-cell-status {
-  width: 100px;
+  width: 120px;
   flex-shrink: 0;
-  justify-content: center;
   align-items: center;
 }
 
@@ -788,6 +805,11 @@ onMounted(() => {
 .cell-status-rejected {
   color: #d1242f;
   background-color: #ffebe9;
+}
+
+.cell-pin-flag {
+  color: #825802;
+  background-color: #f7c848;
 }
 
 .status-select {
