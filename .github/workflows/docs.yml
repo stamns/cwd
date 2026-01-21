@@ -1,17 +1,26 @@
-name: Build and Deploy
-on: [push]
+name: Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+
 jobs:
-  build-and-deploy:
+  publish-docs:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@master
-
-    - name: vuepress-deploy
-      uses: jenkey2011/vuepress-deploy@master
-      env:
-        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        TARGET_REPO: anghunk/CWD
-        TARGET_BRANCH: gh-pages
-        BUILD_SCRIPT: cd docs && npm install && npm run build
-        BUILD_DIR: docs/.vitepress/dist/
+      - uses: actions/checkout@v2
+        # VuePress 需要完整提交历史来生成贡献者信息
+        with:
+          fetch-depth: 0
+      - uses: imaegoo/vuepress-deploy@master
+        env:
+          ACCESS_TOKEN: ${{ secrets.TWIKOO_TOKEN }}
+          TARGET_REPO: anghunk/CWD
+          TARGET_BRANCH: gh-pages
+          BUILD_SCRIPT: cd docs && yarn && yarn build
+          BUILD_DIR: .vitepress/dist
+          CNAME: cwd.js.org
