@@ -97,9 +97,27 @@
         return response.json();
     }
 
+    async function trackVisit() {
+        try {
+            await fetch(`${baseUrl}/api/analytics/visit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    postSlug: config.postSlug,
+                    postTitle: config.postTitle,
+                    postUrl: config.postUrl
+                })
+            });
+        } catch (e) {
+        }
+    }
+
 	return {
 		fetchComments,
 		submitComment,
-        verifyAdminKey
+        verifyAdminKey,
+        trackVisit
 	};
 }

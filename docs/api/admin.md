@@ -10,7 +10,9 @@ Authorization: Bearer <token>
 
 Token 通过登录接口获取，有效期为 24 小时。
 
-## 管理员登录
+## 1. 身份认证相关
+
+### 1.1 管理员登录
 
 ```
 POST /admin/login
@@ -93,7 +95,9 @@ POST /admin/login
   }
   ```
 
-## 获取评论列表
+## 2. 评论管理相关
+
+### 2.1 获取评论列表
 
 ```
 GET /admin/comments/list
@@ -135,6 +139,7 @@ GET /admin/comments/list
 			"contentText": "很棒的文章！",
 			"contentHtml": "很棒的文章！",
 			"status": "approved",
+			"priority": 2,
 			"ua": "Mozilla/5.0 ...",
 			"avatar": "https://gravatar.com/avatar/..."
 		}
@@ -158,13 +163,15 @@ GET /admin/comments/list
   }
   ```
 
-## 更新评论状态
+### 2.2 更新评论状态
 
 ```
 PUT /admin/comments/status
 ```
 
 更新评论状态（例如通过 / 拒绝）。
+
+**注意**：此接口仅用于更新评论状态，如需修改评论内容、置顶权重等，请使用 `/admin/comments/update` 接口。
 
 - 方法：`PUT`
 - 路径：`/admin/comments/status`
@@ -212,7 +219,106 @@ PUT /admin/comments/status
   }
   ```
 
-## 删除指定评论
+### 2.3 更新评论内容
+
+```
+PUT /admin/comments/update
+```
+
+更新评论的详细信息，包括昵称、邮箱、网址、评论地址、内容、状态和置顶权重等。
+
+- 方法：`PUT`
+- 路径：`/admin/comments/update`
+- 鉴权：需要（Bearer Token）
+
+**请求头**
+
+| 名称           | 必填 | 示例               |
+| -------------- | ---- | ------------------ |
+| `Content-Type` | 是   | `application/json` |
+
+**请求体**
+
+```json
+{
+  "id": 1,
+  "name": "张三",
+  "email": "zhangsan@example.com",
+  "url": "https://zhangsan.me",
+  "postSlug": "https://example.com/blog/hello-world",
+  "contentText": "更新后的评论内容",
+  "status": "approved",
+  "priority": 2
+}
+```
+
+字段说明：
+
+| 字段名      | 类型   | 必填 | 说明                                   |
+| ----------- | ------ | ---- | -------------------------------------- |
+| `id`        | number | 是   | 评论 ID                                |
+| `name`      | string | 是   | 评论者昵称                             |
+| `email`     | string | 是   | 评论者邮箱                             |
+| `url`       | string | 否   | 评论者个人主页或站点地址                 |
+| `postSlug`  | string | 否   | 评论地址（文章 URL），不传则保持原值   |
+| `contentText` | string | 是   | 评论内容（纯文本）                     |
+| `status`    | string | 否   | 评论状态，可选 `approved`、`pending`、`rejected` |
+| `priority`  | number | 否   | 置顶权重，默认为 1，数值越大越靠前   |
+
+**置顶权重说明**：
+
+- `1`：不置顶（默认值）
+- `2` 或更高：数值越大，该评论在列表中排序越靠前
+- 公开 API 获取评论时，会按照 `priority DESC` 进行排序
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+  "message": "Comment updated, id: 1."
+}
+```
+
+**错误响应**
+
+- ID 无效：
+  - 状态码：`400` 或 `404`
+
+  ```json
+  {
+    "message": "Missing or invalid id"
+  }
+  ```
+
+  或
+
+  ```json
+  {
+    "message": "Comment not found"
+  }
+  ```
+
+- 必填字段为空：
+  - 状态码：`400`
+
+  ```json
+  {
+    "message": "昵称不能为空"
+  }
+  ```
+
+- 更新失败：
+  - 状态码：`500`
+
+  ```json
+  {
+    "message": "Update failed"
+  }
+  ```
+
+### 2.4 删除指定评论
 
 ```
 DELETE /admin/comments/delete
@@ -260,7 +366,142 @@ DELETE /admin/comments/delete
   }
   ```
 
-## 导出所有评论数据
+### 2.5 将指定 IP 加入评论黑名单
+
+```
+POST /admin/comments/block-ip
+```
+
+通过接口将指定 IP 地址加入评论黑名单，后续该 IP 提交评论将被拒绝。
+
+- 方法：`POST`
+- 路径：`/admin/comments/block-ip`
+- 鉴权：需要（Bearer Token）
+
+**请求头**
+
+| 名称           | 必填 | 示例               |
+| -------------- | ---- | ------------------ |
+| `Content-Type` | 是   | `application/json` |
+
+**请求体**
+
+```json
+{
+	"ip": "1.1.1.1"
+}
+```
+
+字段说明：
+
+| 字段名 | 类型   | 必填 | 说明                                             |
+| ------ | ------ | ---- | ------------------------------------------------ |
+| `ip`   | string | 是   | 要加入黑名单的 IP 地址，多个 IP 用逗号或换行分隔 |
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+	"message": "已加入 IP 黑名单"
+}
+```
+
+**错误响应**
+
+- IP 为空：
+  - 状态码：`400`
+
+  ```json
+  {
+  	"message": "IP 地址不能为空"
+  }
+  ```
+
+- 内部错误：
+  - 状态码：`500`
+
+  ```json
+  {
+  	"message": "操作失败"
+  }
+  ```
+
+### 2.6 将指定邮箱加入评论黑名单
+
+```
+POST /admin/comments/block-email
+```
+
+通过接口将指定邮箱地址加入评论黑名单，后续该邮箱提交评论将被拒绝。
+
+- 方法：`POST`
+- 路径：`/admin/comments/block-email`
+- 鉴权：需要（Bearer Token）
+
+**请求头**
+
+| 名称           | 必填 | 示例               |
+| -------------- | ---- | ------------------ |
+| `Content-Type` | 是   | `application/json` |
+
+**请求体**
+
+```json
+{
+	"email": "spam@example.com"
+}
+```
+
+字段说明：
+
+| 字段名  | 类型   | 必填 | 说明                                             |
+| ------- | ------ | ---- | ------------------------------------------------ |
+| `email` | string | 是   | 要加入黑名单的邮箱地址，多个邮箱用逗号或换行分隔 |
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+	"message": "已加入邮箱黑名单"
+}
+```
+
+**错误响应**
+
+- 邮箱为空：
+  - 状态码：`400`
+
+  ```json
+  {
+  	"message": "邮箱不能为空"
+  }
+  ```
+
+- 邮箱格式不正确：
+  - 状态码：`400`
+
+  ```json
+  {
+  	"message": "邮箱格式不正确"
+  }
+  ```
+
+- 内部错误：
+  - 状态码：`500`
+
+  ```json
+  {
+  	"message": "操作失败"
+  }
+  ```
+
+## 3. 评论数据导入导出
+
+### 3.1 导出所有评论数据
 
 ```
 GET /admin/comments/export
@@ -309,7 +550,7 @@ GET /admin/comments/export
   }
   ```
 
-## 导入评论数据
+### 3.2 导入评论数据
 
 ```
 POST /admin/comments/import
@@ -377,95 +618,9 @@ POST /admin/comments/import
   }
   ```
 
-## 获取当前通知邮箱配置
+## 4. 评论设置相关
 
-```
-GET /admin/settings/email
-```
-
-获取当前通知邮箱配置。
-
-- 方法：`GET`
-- 路径：`/admin/settings/email`
-- 鉴权：需要（Bearer Token）
-
-**成功响应**
-
-- 状态码：`200`
-
-```json
-{
-	"email": "admin@example.com"
-}
-```
-
-**错误响应**
-
-- 状态码：`500`
-
-```json
-{
-	"message": "错误信息"
-}
-```
-
-## 设置通知邮箱
-
-```
-PUT /admin/settings/email
-```
-
-设置通知邮箱，用于接收新评论提醒。
-
-- 方法：`PUT`
-- 路径：`/admin/settings/email`
-- 鉴权：需要（Bearer Token）
-
-**请求头**
-
-| 名称           | 必填 | 示例               |
-| -------------- | ---- | ------------------ |
-| `Content-Type` | 是   | `application/json` |
-
-**请求体**
-
-```json
-{
-	"email": "admin@example.com"
-}
-```
-
-**成功响应**
-
-- 状态码：`200`
-
-```json
-{
-	"message": "保存成功"
-}
-```
-
-**错误响应**
-
-- 邮箱格式不正确：
-  - 状态码：`400`
-
-  ```json
-  {
-  	"message": "邮箱格式不正确"
-  }
-  ```
-
-- 服务器错误：
-  - 状态码：`500`
-
-  ```json
-  {
-  	"message": "错误信息"
-  }
-  ```
-
-## 获取评论配置
+### 4.1 获取评论配置
 
 ```
 GET /admin/settings/comments
@@ -500,13 +655,13 @@ GET /admin/settings/comments
 
 | 字段名           | 类型            | 说明                                                      |
 | ---------------- | --------------- | --------------------------------------------------------- |
-| `adminEmail`     | string          | 博主邮箱地址，用于显示“博主”标识以及管理员身份验证        |
+| `adminEmail`     | string          | 博主邮箱地址，用于显示"博主"标识以及管理员身份验证        |
 | `adminBadge`     | string          | 博主标识文字，例如 `"博主"`                               |
 | `avatarPrefix`   | string          | 头像地址前缀，如 Gravatar 或 Cravatar 镜像地址            |
 | `adminEnabled`   | boolean         | 是否启用博主标识相关展示                                  |
 | `allowedDomains` | Array\<string\> | 允许调用组件的域名列表，留空则不限制                      |
 | `adminKey`       | string\|null    | 管理员评论密钥（明文），仅通过管理后台接口返回            |
-| `adminKeySet`    | boolean         | 是否已经设置过管理员评论密钥                              |
+| `adminKeySet`    | boolean         | 是否已经设置过管理员管理员评论密钥                              |
 | `requireReview`  | boolean         | 是否开启新评论先审核再显示（true 表示新评论默认为待审核） |
 | `blockedIps`     | Array\<string\> | IP 黑名单列表，匹配到的 IP 提交评论将被拒绝               |
 | `blockedEmails`  | Array\<string\> | 邮箱黑名单列表，匹配到的邮箱提交评论将被拒绝              |
@@ -521,7 +676,7 @@ GET /admin/settings/comments
 }
 ```
 
-## 更新评论配置
+### 4.2 更新评论配置
 
 ```
 PUT /admin/settings/comments
@@ -599,16 +754,51 @@ PUT /admin/settings/comments
   }
   ```
 
-## 将指定 IP 加入评论黑名单
+### 4.3 获取通知邮箱配置（已废弃）
 
 ```
-POST /admin/comments/block-ip
+GET /admin/settings/email
 ```
 
-通过接口将指定 IP 地址加入评论黑名单，后续该 IP 提交评论将被拒绝。
+获取当前通知邮箱配置。
 
-- 方法：`POST`
-- 路径：`/admin/comments/block-ip`
+> [!NOTE]
+> 此接口已被 `/admin/settings/email-notify` 替代，建议使用新接口获取完整的邮件通知配置。
+
+- 方法：`GET`
+- 路径：`/admin/settings/email`
+- 鉴权：需要（Bearer Token）
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+	"email": "admin@example.com"
+}
+```
+
+**错误响应**
+
+- 状态码：`500`
+
+```json
+{
+	"message": "错误信息"
+}
+```
+
+### 4.4 设置通知邮箱（已废弃）
+
+```
+PUT /admin/settings/email
+```
+
+设置通知邮箱，用于接收新评论提醒。
+
+- 方法：`PUT`
+- 路径：`/admin/settings/email`
 - 鉴权：需要（Bearer Token）
 
 **请求头**
@@ -621,15 +811,9 @@ POST /admin/comments/block-ip
 
 ```json
 {
-	"ip": "1.1.1.1"
+	"email": "admin@example.com"
 }
 ```
-
-字段说明：
-
-| 字段名 | 类型   | 必填 | 说明                                             |
-| ------ | ------ | ---- | ------------------------------------------------ |
-| `ip`   | string | 是   | 要加入黑名单的 IP 地址，多个 IP 用逗号或换行分隔 |
 
 **成功响应**
 
@@ -637,82 +821,11 @@ POST /admin/comments/block-ip
 
 ```json
 {
-	"message": "已加入 IP 黑名单"
+	"message": "保存成功"
 }
 ```
 
 **错误响应**
-
-- IP 为空：
-  - 状态码：`400`
-
-  ```json
-  {
-  	"message": "IP 地址不能为空"
-  }
-  ```
-
-- 内部错误：
-  - 状态码：`500`
-
-  ```json
-  {
-  	"message": "操作失败"
-  }
-  ```
-
-## 将指定邮箱加入评论黑名单
-
-```
-POST /admin/comments/block-email
-```
-
-通过接口将指定邮箱地址加入评论黑名单，后续该邮箱提交评论将被拒绝。
-
-- 方法：`POST`
-- 路径：`/admin/comments/block-email`
-- 鉴权：需要（Bearer Token）
-
-**请求头**
-
-| 名称           | 必填 | 示例               |
-| -------------- | ---- | ------------------ |
-| `Content-Type` | 是   | `application/json` |
-
-**请求体**
-
-```json
-{
-	"email": "spam@example.com"
-}
-```
-
-字段说明：
-
-| 字段名  | 类型   | 必填 | 说明                                             |
-| ------- | ------ | ---- | ------------------------------------------------ |
-| `email` | string | 是   | 要加入黑名单的邮箱地址，多个邮箱用逗号或换行分隔 |
-
-**成功响应**
-
-- 状态码：`200`
-
-```json
-{
-	"message": "已加入邮箱黑名单"
-}
-```
-
-**错误响应**
-
-- 邮箱为空：
-  - 状态码：`400`
-
-  ```json
-  {
-  	"message": "邮箱不能为空"
-  }
-  ```
 
 - 邮箱格式不正确：
   - 状态码：`400`
@@ -723,16 +836,250 @@ POST /admin/comments/block-email
   }
   ```
 
-- 内部错误：
+- 服务器错误：
   - 状态码：`500`
 
   ```json
   {
-  	"message": "操作失败"
+  	"message": "错误信息"
   }
   ```
 
-## 获取评论统计数据（数据看板）
+## 5. 邮件通知配置相关
+
+### 5.1 获取邮件通知配置
+
+```
+GET /admin/settings/email-notify
+```
+
+获取邮件通知配置，包括 SMTP 配置和邮件模板。
+
+- 方法：`GET`
+- 路径：`/admin/settings/email-notify`
+- 鉴权：需要（Bearer Token）
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+  "globalEnabled": true,
+  "smtp": {
+    "host": "smtp.qq.com",
+    "port": 465,
+    "user": "noreply@qq.com",
+    "pass": "",
+    "secure": true
+  },
+  "templates": {
+    "reply": "回复评论的邮件模板 HTML",
+    "admin": "新评论通知的邮件模板 HTML"
+  }
+}
+```
+
+字段说明：
+
+| 字段名         | 类型    | 说明                                                         |
+| -------------- | ------- | ------------------------------------------------------------ |
+| `globalEnabled` | boolean | 是否全局启用邮件通知                                           |
+| `smtp.host`    | string  | SMTP 服务器地址，默认 `smtp.qq.com`                            |
+| `smtp.port`    | number  | SMTP 服务器端口，默认 `465`                                  |
+| `smtp.user`    | string  | SMTP 用户名（发件邮箱）                                      |
+| `smtp.pass`    | string  | SMTP 密码（脱敏显示，不返回完整密码）                         |
+| `smtp.secure`  | boolean | 是否使用 SSL/TLS，默认 `true`                                |
+| `templates.reply` | string | 回复评论时的邮件模板，支持变量占位符                          |
+| `templates.admin` | string | 新评论通知的邮件模板，支持变量占位符                          |
+
+**邮件模板变量**
+
+回复评论模板（`templates.reply`）支持的变量：
+
+| 变量名            | 说明         |
+| ----------------- | ------------ |
+| `${toEmail}`      | 收件人邮箱   |
+| `${toName}`       | 收件人昵称   |
+| `${postTitle}`     | 文章标题     |
+| `${parentComment}` | 被回复的评论内容 |
+| `${replyAuthor}`   | 回复者昵称   |
+| `${replyContent}`  | 回复内容     |
+| `${postUrl}`      | 文章链接     |
+
+新评论通知模板（`templates.admin`）支持的变量：
+
+| 变量名            | 说明         |
+| ----------------- | ------------ |
+| `${postTitle}`     | 文章标题     |
+| `${postUrl}`      | 文章链接     |
+| `${commentAuthor}` | 评论者昵称   |
+| `${commentContent}` | 评论内容     |
+
+**错误响应**
+
+- 状态码：`500`
+
+```json
+{
+  "message": "错误信息"
+}
+```
+
+### 5.2 更新邮件通知配置
+
+```
+PUT /admin/settings/email-notify
+```
+
+更新邮件通知配置，包括 SMTP 配置和邮件模板。
+
+- 方法：`PUT`
+- 路径：`/admin/settings/email-notify`
+- 鉴权：需要（Bearer Token）
+
+**请求头**
+
+| 名称           | 必填 | 示例               |
+| -------------- | ---- | ------------------ |
+| `Content-Type` | 是   | `application/json` |
+
+**请求体**
+
+```json
+{
+  "globalEnabled": true,
+  "smtp": {
+    "host": "smtp.qq.com",
+    "port": 465,
+    "user": "noreply@qq.com",
+    "pass": "your_password",
+    "secure": true
+  },
+  "templates": {
+    "reply": "<div>...</div>",
+    "admin": "<div>...</div>"
+  }
+}
+```
+
+字段说明：
+
+| 字段名         | 类型    | 必填 | 说明                                                         |
+| -------------- | ------- | ---- | ------------------------------------------------------------ |
+| `globalEnabled` | boolean | 否   | 是否全局启用邮件通知                                           |
+| `smtp`        | object  | 否   | SMTP 配置对象                                                 |
+| `smtp.host`    | string  | 否   | SMTP 服务器地址                                               |
+| `smtp.port`    | number  | 否   | SMTP 服务器端口                                               |
+| `smtp.user`       | string  | 否   | SMTP 用户名（发件邮箱）                                       |
+| `smtp.pass`    | string  | 否   | SMTP 密码                                                     |
+| `smtp.secure`  | boolean | 否   | 是否使用 SSL/TLS                                              |
+| `templates`    | object  | 否   | 邮件模板对象                                                 |
+| `templates.reply` | string | 否   | 回复评论的邮件模板 HTML                                        |
+| `templates.admin` | string | 否   | 新评论通知的邮件模板 HTML                                      |
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+  "message": "保存成功"
+}
+```
+
+**错误响应**
+
+- 状态码：`500`
+
+```json
+{
+  "message": "保存失败"
+}
+```
+
+### 5.3 测试邮件发送
+
+```
+POST /admin/settings/email-test
+```
+
+测试邮件通知配置是否正确，发送一封测试邮件到指定邮箱。
+
+- 方法：`POST`
+- 路径：`/admin/settings/email-test`
+- 鉴权：需要（Bearer Token）
+
+**请求头**
+
+| 名称           | 必填 | 示例               |
+| -------------- | ---- | ------------------ |
+| `Content-Type` | 是   | `application/json` |
+
+**请求体**
+
+```json
+{
+  "toEmail": "test@example.com",
+  "smtp": {
+    "host": "smtp.qq.com",
+    "port": 465,
+    "user": "noreply@qq.com",
+    "pass": "your_password",
+    "secure": true
+  }
+}
+```
+
+字段说明：
+
+| 字段名      | 类型   | 必填 | 说明                                 |
+| ----------- | ------ | ---- | ------------------------------------ |
+| `toEmail`   | string | 是   | 接收测试邮件的邮箱地址              |
+| `smtp`      | object  | 是   | SMTP 配置对象（与更新配置接口相同） |
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+  "message": "邮件发送成功"
+}
+```
+
+**错误响应**
+
+- 接收邮箱无效：
+  - 状态码：`400`
+
+  ```json
+  {
+    "message": "请输入有效的接收邮箱"
+  }
+  ```
+
+- SMTP 配置不完整：
+  - 状态码：`400`
+
+  ```json
+  {
+    "message": "SMTP 配置不完整"
+  }
+  ```
+
+- 邮件发送失败：
+  - 状态码：`500`
+
+  ```json
+  {
+    "message": "邮件发送失败: 具体错误信息"
+  }
+  ```
+
+## 6. 统计数据相关
+
+### 6.1 获取评论统计数据（数据看板）
 
 ```
 GET /admin/stats/comments

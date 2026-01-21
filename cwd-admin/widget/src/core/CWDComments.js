@@ -169,6 +169,10 @@ export class CWDComments {
 
 			this._render();
 			this.store.loadComments();
+
+			if (this.api && typeof this.api.trackVisit === 'function') {
+				this.api.trackVisit();
+			}
 		})();
 
 		this._mounted = true;

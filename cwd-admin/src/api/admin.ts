@@ -83,6 +83,23 @@ export type CommentStatsResponse = {
 	}[];
 };
 
+export type VisitOverviewResponse = {
+	totalPv: number;
+	totalPages: number;
+};
+
+export type VisitPageItem = {
+	postSlug: string;
+	postTitle: string | null;
+	postUrl: string | null;
+	pv: number;
+	lastVisitAt: string | null;
+};
+
+export type VisitPagesResponse = {
+	items: VisitPageItem[];
+};
+
 export async function loginAdmin(name: string, password: string): Promise<string> {
 	const res = await post<AdminLoginResponse>('/admin/login', { name, password });
 	const key = res.data.key;
@@ -211,4 +228,12 @@ export function importComments(data: any[]): Promise<{ message: string }> {
 
 export function fetchCommentStats(): Promise<CommentStatsResponse> {
 	return get<CommentStatsResponse>('/admin/stats/comments');
+}
+
+export function fetchVisitOverview(): Promise<VisitOverviewResponse> {
+	return get<VisitOverviewResponse>('/admin/analytics/overview');
+}
+
+export function fetchVisitPages(): Promise<VisitPagesResponse> {
+	return get<VisitPagesResponse>('/admin/analytics/pages');
 }

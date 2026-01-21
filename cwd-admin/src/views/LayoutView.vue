@@ -77,6 +77,13 @@
           </li>
           <li
             class="menu-item"
+            :class="{ active: isRouteActive('analytics') }"
+            @click="goAnalytics"
+          >
+            访问统计
+          </li>
+          <li
+            class="menu-item"
             :class="{ active: isRouteActive('settings') }"
             @click="goSettings"
           >
@@ -137,6 +144,11 @@ function goComments() {
 
 function goStats() {
   router.push({ name: "stats" });
+  closeSider();
+}
+
+function goAnalytics() {
+  router.push({ name: "analytics" });
   closeSider();
 }
 

@@ -5,6 +5,7 @@ import CommentsView from '../views/CommentsView.vue';
 import SettingsView from '../views/SettingsView.vue';
 import DataView from '../views/DataView.vue';
 import StatsView from '../views/StatsView.vue';
+import AnalyticsVisitView from '../views/AnalyticsVisitView.vue';
 
 const routes: RouteRecordRaw[] = [
 	{
@@ -29,6 +30,11 @@ const routes: RouteRecordRaw[] = [
 				path: 'stats',
 				name: 'stats',
 				component: StatsView
+			},
+			{
+				path: 'analytics',
+				name: 'analytics',
+				component: AnalyticsVisitView
 			},
 			{
 				path: 'settings',
