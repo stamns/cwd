@@ -13,7 +13,7 @@
       <div class="card">
         <h3 class="card-title">评论显示配置</h3>
         <div class="form-item">
-          <label class="form-label">评论博主邮箱（用于前台标记）</label>
+          <label class="form-label">管理员邮箱</label>
           <input v-model="commentAdminEmail" class="form-input" type="email" />
         </div>
         <div class="form-item">
@@ -21,16 +21,9 @@
           <input v-model="commentAdminBadge" class="form-input" type="text" />
         </div>
         <div class="form-item">
-          <label class="form-label">是否开启博主显示</label>
+          <label class="form-label">是否开启博主标签显示</label>
           <label class="switch">
             <input v-model="commentAdminEnabled" type="checkbox" />
-            <span class="slider" />
-          </label>
-        </div>
-        <div class="form-item">
-          <label class="form-label">新评论是否审核后再显示</label>
-          <label class="switch">
-            <input v-model="requireReview" type="checkbox" />
             <span class="slider" />
           </label>
         </div>
@@ -39,6 +32,13 @@
           <input v-model="avatarPrefix" class="form-input" type="text" />
         </div>
         <h3 class="card-title">安全设置</h3>
+        <div class="form-item">
+          <label class="form-label">新评论是否审核后再显示</label>
+          <label class="switch">
+            <input v-model="requireReview" type="checkbox" />
+            <span class="slider" />
+          </label>
+        </div>
         <div class="form-item">
           <label class="form-label">
             管理员评论密钥（设置后前台使用管理员邮箱评论需输入此密钥。）
