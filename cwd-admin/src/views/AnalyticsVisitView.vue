@@ -53,28 +53,35 @@
       <div v-if="loading" class="page-hint">加载中...</div>
       <div v-else-if="error" class="page-error">{{ error }}</div>
       <div v-else-if="items.length === 0" class="page-hint">暂无访问数据</div>
-      <div v-else class="domain-table">
-        <div class="domain-table-header">
-          <div class="domain-cell domain-cell-domain">页面标题</div>
-          <div class="domain-cell">访问量</div>
-          <div class="domain-cell">最后访问时间</div>
-          <div class="domain-cell">页面地址</div>
-        </div>
-        <div v-for="item in items" :key="item.postSlug" class="domain-table-row">
-          <div class="domain-cell domain-cell-domain">
-            {{ item.postTitle || item.postSlug }}
+      <div v-else class="domain-table-wrapper">
+        <div class="domain-table">
+          <div class="domain-table-header">
+            <div class="domain-cell domain-cell-title">页面标题</div>
+            <div class="domain-cell domain-cell-pv">访问量</div>
+            <div class="domain-cell domain-cell-time">最后访问时间</div>
+            <div class="domain-cell domain-cell-url">页面地址</div>
           </div>
-          <div class="domain-cell">
-            {{ item.pv }}
-          </div>
-          <div class="domain-cell">
-            {{ formatTime(item.lastVisitAt) }}
-          </div>
-          <div class="domain-cell">
-            <a v-if="item.postUrl" :href="item.postUrl" target="_blank" rel="noreferrer">
-              {{ item.postUrl }}
-            </a>
-            <span v-else>-</span>
+          <div v-for="item in items" :key="item.postSlug" class="domain-table-row">
+            <div class="domain-cell domain-cell-title">
+              {{ item.postTitle || item.postSlug }}
+            </div>
+            <div class="domain-cell domain-cell-pv">
+              {{ item.pv }}
+            </div>
+            <div class="domain-cell domain-cell-time">
+              {{ formatTime(item.lastVisitAt) }}
+            </div>
+            <div class="domain-cell domain-cell-url">
+              <a
+                v-if="item.postUrl"
+                :href="item.postUrl"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {{ item.postUrl }}
+              </a>
+              <span v-else>-</span>
+            </div>
           </div>
         </div>
       </div>
@@ -392,9 +399,16 @@ watch(
   color: #24292f;
 }
 
+.domain-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .domain-table {
   border: 1px solid #d0d7de;
   border-radius: 6px;
+  min-width: 520px;
   overflow: hidden;
 }
 
@@ -420,9 +434,46 @@ watch(
   color: #57606a;
 }
 
-.domain-cell-domain {
-  flex: 2;
+.domain-cell-title {
   font-weight: 500;
+}
+
+.domain-cell-pv {
+  text-align: center;
+}
+
+.domain-cell-time {
+  flex: 0 0 170px;
+}
+
+.domain-cell-url {
+  word-break: break-all;
+}
+
+@media (max-width: 768px) {
+  .domain-table {
+    width: 610px;
+  }
+
+  .domain-cell {
+    flex: none;
+  }
+
+  .domain-cell-title {
+    width: 160px;
+  }
+
+  .domain-cell-pv {
+    width: 100px;
+  }
+
+  .domain-cell-time {
+    width: 150px;
+  }
+
+  .domain-cell-url {
+    width: 200px;
+  }
 }
 
 .chart-wrapper {
@@ -456,11 +507,5 @@ watch(
 .toast-error {
   background-color: #d1242f;
   color: #ffffff;
-}
-
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-  }
 }
 </style>

@@ -65,20 +65,26 @@
       <div v-if="statsLoading" class="page-hint">加载中...</div>
       <div v-else-if="statsError" class="page-error">{{ statsError }}</div>
       <div v-else-if="domainStats.length === 0" class="page-hint">暂无评论数据</div>
-      <div v-else class="domain-table">
-        <div class="domain-table-header">
-          <div class="domain-cell domain-cell-domain">域名</div>
-          <div class="domain-cell">总数</div>
-          <div class="domain-cell">已通过</div>
-          <div class="domain-cell">待审核</div>
-          <div class="domain-cell">已拒绝</div>
-        </div>
-        <div v-for="item in domainStats" :key="item.domain" class="domain-table-row">
-          <div class="domain-cell domain-cell-domain">{{ item.domain }}</div>
-          <div class="domain-cell">{{ item.total }}</div>
-          <div class="domain-cell">{{ item.approved }}</div>
-          <div class="domain-cell">{{ item.pending }}</div>
-          <div class="domain-cell">{{ item.rejected }}</div>
+      <div v-else class="domain-table-wrapper">
+        <div class="domain-table">
+          <div class="domain-table-header">
+            <div class="domain-cell domain-cell-domain">域名</div>
+            <div class="domain-cell">总数</div>
+            <div class="domain-cell">已通过</div>
+            <div class="domain-cell">待审核</div>
+            <div class="domain-cell">已拒绝</div>
+          </div>
+          <div
+            v-for="item in domainStats"
+            :key="item.domain"
+            class="domain-table-row"
+          >
+            <div class="domain-cell domain-cell-domain">{{ item.domain }}</div>
+            <div class="domain-cell">{{ item.total }}</div>
+            <div class="domain-cell">{{ item.approved }}</div>
+            <div class="domain-cell">{{ item.pending }}</div>
+            <div class="domain-cell">{{ item.rejected }}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -346,9 +352,16 @@ onBeforeUnmount(() => {
   color: #d1242f;
 }
 
+.domain-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .domain-table {
   border: 1px solid #d0d7de;
   border-radius: 6px;
+  min-width: 520px;
   overflow: hidden;
 }
 

@@ -163,7 +163,7 @@ export const getVisitPages = async (c: Context<{ Bindings: Bindings }>) => {
 			last_visit_at: number | null;
 		}>();
 
-		const items: VisitPageItem[] = [];
+		let items: VisitPageItem[] = [];
 
 		for (const row of results) {
 			const domain =
@@ -183,6 +183,8 @@ export const getVisitPages = async (c: Context<{ Bindings: Bindings }>) => {
 				lastVisitAt: row.last_visit_at
 			});
 		}
+
+		items = items.slice(0, 20);
 
 		return c.json({ items });
 	} catch (e: any) {

@@ -4,7 +4,7 @@ import { defineConfig } from 'vitepress';
 
 export default defineConfig({
 	title: 'CWD 评论系统文档',
-	description: '基于 Cloudflare Workers 的轻量级评论系统',
+	description: '基于 Cloudflare Workers 与全球边缘网络的免服务器、极速安全、即插即用评论系统。',
 	lang: 'zh-CN',
 	head: [
 		[
@@ -19,7 +19,7 @@ export default defineConfig({
 		nav,
 		sidebar,
 		outline: {
-			level: [2,3],
+			level: [2, 3],
 			label: 'On this page',
 		},
 		editLink: {
