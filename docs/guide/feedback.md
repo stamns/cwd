@@ -2,7 +2,8 @@
 
 在使用中遇到问题或有建议吗？请通过以下方式联系我们：
 
-- [Github Isseus](https://github.com/anghunk/cwd/issues)
 - 涉及到文档的问题，请直接在对应页面下进行评论留言！
+- [Github Isseus](https://github.com/anghunk/cwd/issues)
+- [Discord](https://discord.gg/VahC3r7t)
 
 我们会尽快回复您的反馈。感谢您的参与！
