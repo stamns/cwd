@@ -63,12 +63,23 @@ comments.updateConfig({ theme: 'dark' });
 ```html
 <div id="comments"></div>
 <script src="https://cwd.js.org/cwd.js"></script>
+
+<!-- 实例调用 -->
 <script>
 	const comments = new CWDComments({
 		el: '#comments',
 		apiBaseUrl: 'https://your-api.example.com', // 换成你的 API 地址
 	});
 	comments.mount();
+
+	// 或者
+	// document.addEventListener('DOMContentLoaded', () => {
+	// 	const comments = new window.CWDComments({
+	// 		el: '#comments',
+	// 		apiBaseUrl: 'https://your-api.example.com',
+	// 	});
+	// 	comments.mount();
+	// });
 </script>
 ```
 
