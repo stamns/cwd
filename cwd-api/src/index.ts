@@ -7,6 +7,7 @@ import {
 	loadEmailNotificationSettings,
 	saveEmailNotificationSettings
 } from './utils/email';
+import { loadFeatureSettings } from './utils/featureSettings';
 import packageJson from '../package.json';
 
 import { getComments } from './api/public/getComments';
@@ -30,6 +31,10 @@ import { getLikeStatus, likePage } from './api/public/like';
 import { likeComment } from './api/public/likeComment';
 import { listLikes } from './api/admin/listLikes';
 import { getLikeStats } from './api/admin/likeStats';
+import {
+	getFeatureSettings,
+	updateFeatureSettings
+} from './api/admin/featureSettings';
 
 const app = new Hono<{ Bindings: Bindings }>();
 const VERSION = `v${packageJson.version}`;
@@ -228,6 +233,7 @@ app.post('/api/comments/like', likeComment);
 app.get('/api/config/comments', async (c) => {
 	try {
 		const settings = await loadCommentSettings(c.env);
+		const featureSettings = await loadFeatureSettings(c.env);
 		const {
 			adminKey,
 			adminKeySet,
@@ -236,7 +242,7 @@ app.get('/api/config/comments', async (c) => {
 			...publicSettings
 		} = settings as any;
 
-		return c.json(publicSettings);
+		return c.json({ ...publicSettings, ...featureSettings });
 	} catch (e: any) {
 		return c.json({ message: e.message || '加载评论配置失败' }, 500);
 	}
@@ -256,6 +262,8 @@ app.get('/admin/analytics/overview', getVisitOverview);
 app.get('/admin/analytics/pages', getVisitPages);
 app.get('/admin/likes/list', listLikes);
 app.get('/admin/likes/stats', getLikeStats);
+app.get('/admin/settings/features', getFeatureSettings);
+app.put('/admin/settings/features', updateFeatureSettings);
 app.get('/admin/settings/email', getAdminEmail);
 app.put('/admin/settings/email', setAdminEmail);
 app.get('/admin/settings/email-notify', async (c) => {

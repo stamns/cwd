@@ -7,6 +7,11 @@ import { ReplyEditor } from './ReplyEditor.js';
 import { formatRelativeTime } from '@/utils/date.js';
 
 export class CommentItem extends Component {
+  // 防抖缓存，防止连续点击
+  static _likeDebounce = new Map();
+  // 用户标识缓存（单例，确保一致性）
+  static _userId = null;
+
   /**
    * @param {HTMLElement|string} container - 容器元素或选择器
    * @param {Object} props - 组件属性
@@ -105,49 +110,58 @@ export class CommentItem extends Component {
                       },
                       text: '回复'
                     }),
-                    this.createElement('div', {
-                      className: 'cwd-comment-like',
-                      children: [
-                        this.createElement('button', {
-                          className: 'cwd-comment-like-button',
-                          attributes: {
-                            type: 'button',
-                            'aria-label': '点赞',
-                            onClick: () => this.handleLikeComment()
-                          },
-                          children: [
-                            this.createElement('span', {
-                              className: 'cwd-comment-like-icon-wrapper',
-                              children: [
-                                this.createElement('svg', {
-                                  className: 'cwd-comment-like-icon',
-                                  attributes: {
-                                    viewBox: '0 0 24 24',
-                                    'aria-hidden': 'true'
-                                  },
-                                  children: [
-                                    this.createElement('path', {
-                                      attributes: {
-                                        d: 'M12 21c-.4 0-.8-.1-1.1-.4L4.5 15C3 13.6 2 11.7 2 9.6 2 6.5 4.5 4 7.6 4c1.7 0 3.3.8 4.4 2.1C13.1 4.8 14.7 4 16.4 4 19.5 4 22 6.5 22 9.6c0 2.1-1 4-2.5 5.4l-6.4 5.6c-.3.3-.7.4-1.1.4z'
-                                      }
-                                    })
-                                  ]
-                                })
-                              ]
-                            }),
-                            this.createTextElement(
-                              'span',
-                              String(
-                                typeof comment.likes === 'number' && Number.isFinite(comment.likes) && comment.likes >= 0
-                                  ? comment.likes
-                                  : 0
-                              ),
-                              'cwd-comment-like-count'
-                            )
-                          ]
-                        })
-                      ]
-                    }),
+                    ...(this.props.enableCommentLike !== false ? [
+                      this.createElement('div', {
+                        className: 'cwd-comment-like',
+                        children: [
+                          this.createElement('button', {
+                            className: `cwd-comment-like-button${this.hasLiked(comment.id) ? ' cwd-comment-like-button-liked' : ''}`,
+                            attributes: {
+                              type: 'button',
+                              'aria-label': this.hasLiked(comment.id) ? '取消点赞' : '点赞',
+                              onClick: () => this.handleLikeComment()
+                            },
+                            children: [
+                              this.createElement('span', {
+                                className: 'cwd-comment-like-icon-wrapper',
+                                children: [
+                                  this.createElement('svg', {
+                                    className: 'cwd-comment-like-icon',
+                                    attributes: {
+                                      viewBox: '0 0 24 24',
+                                      'aria-hidden': 'true',
+                                      fill: this.hasLiked(comment.id) ? 'currentColor' : 'none'
+                                    },
+                                    children: [
+                                      this.createElement('path', {
+                                        attributes: {
+                                          d: 'M2 21h4V9H2v12zm20-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L13 1 7.59 6.41C7.22 6.78 7 7.3 7 7.83V19c0 1.1.9 2 2 2h8c.78 0 1.48-.45 1.82-1.11l3.02-7.05c.11-.23.16-.48.16-.74v-2z'
+                                        }
+                                      })
+                                    ]
+                                  })
+                                ]
+                              }),
+                              ...(() => {
+                                const likeCount =
+                                  typeof comment.likes === 'number' && Number.isFinite(comment.likes) && comment.likes >= 0
+                                    ? comment.likes
+                                    : 0;
+                                return likeCount >= 1
+                                  ? [
+                                      this.createTextElement(
+                                        'span',
+                                        String(likeCount),
+                                        'cwd-comment-like-count'
+                                      )
+                                    ]
+                                  : [];
+                              })()
+                            ]
+                          })
+                        ]
+                      })
+                    ] : []),
                     this.createTextElement('span', formatRelativeTime(comment.created), 'cwd-comment-time')
                   ]
                 })
@@ -303,9 +317,99 @@ export class CommentItem extends Component {
   }
 
   handleLikeComment() {
-    if (this.props.onLikeComment) {
-      this.props.onLikeComment(this.props.comment.id);
+    if (!this.props.onLikeComment) {
+      return;
     }
+
+    const commentId = String(this.props.comment.id);
+
+    // 防抖检查：1秒内同一评论只能操作一次
+    const now = Date.now();
+    const debounceKey = `${this.getUserId()}_${commentId}`;
+    const lastClick = CommentItem._likeDebounce.get(debounceKey);
+    if (lastClick && now - lastClick < 1000) {
+      return;
+    }
+    CommentItem._likeDebounce.set(debounceKey, now);
+
+    // 获取当前点赞状态
+    const likedComments = this.getLikedComments();
+    const hasLiked = likedComments.has(commentId);
+
+    if (!hasLiked) {
+      // 未点赞，执行点赞
+      likedComments.add(commentId);
+      this.saveLikedComments(likedComments);
+      this.props.onLikeComment(commentId, true);
+    }
+    // 已点赞则不做任何操作
+  }
+
+  /**
+   * 获取用户唯一标识
+   * 使用静态缓存确保一致性
+   * @returns {string} 用户ID
+   */
+  getUserId() {
+    if (CommentItem._userId) {
+      return CommentItem._userId;
+    }
+
+    const STORAGE_KEY = 'cwd_comment_user_id';
+    let userId = localStorage.getItem(STORAGE_KEY);
+
+    if (!userId) {
+      // 生成简单的用户ID
+      userId = 'u_' + Date.now() + '_' + Math.random().toString(36).substring(2, 12);
+      localStorage.setItem(STORAGE_KEY, userId);
+    }
+
+    CommentItem._userId = userId;
+    return userId;
+  }
+
+  /**
+   * 获取已点赞的评论ID集合
+   * @returns {Set<string>} 已点赞的评论ID集合
+   */
+  getLikedComments() {
+    const userId = this.getUserId();
+    const key = `cwd_comment_liked_${userId}`;
+    const data = localStorage.getItem(key);
+    const likedSet = new Set();
+
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(id => likedSet.add(String(id)));
+        }
+      } catch (e) {
+        // 解析失败，返回空集合
+      }
+    }
+
+    return likedSet;
+  }
+
+  /**
+   * 保存点赞记录到 localStorage
+   * @param {Set} likedSet - 点赞集合
+   */
+  saveLikedComments(likedSet) {
+    const userId = this.getUserId();
+    const key = `cwd_comment_liked_${userId}`;
+    localStorage.setItem(key, JSON.stringify(Array.from(likedSet)));
+  }
+
+  /**
+   * 检查是否已点赞
+   * @param {string|number} commentId - 评论ID
+   * @returns {boolean} 是否已点赞
+   */
+  hasLiked(commentId) {
+    const likedComments = this.getLikedComments();
+    return likedComments.has(String(commentId));
   }
 
   handleSubmitReply() {

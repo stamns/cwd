@@ -49,7 +49,7 @@ export class CWDComments {
 		this.likeState = {
 			count: 0,
 			liked: false,
-			loading: false
+			loading: false,
 		};
 		this._likeButtonEl = null;
 		this._likeCountEl = null;
@@ -99,6 +99,8 @@ export class CWDComments {
 				adminEnabled: !!data.adminEnabled,
 				avatarPrefix: data.avatarPrefix || '',
 				allowedDomains: Array.isArray(data.allowedDomains) ? data.allowedDomains : [],
+				enableCommentLike: typeof data.enableCommentLike === 'boolean' ? data.enableCommentLike : true,
+				enableArticleLike: typeof data.enableArticleLike === 'boolean' ? data.enableArticleLike : true,
 			};
 		} catch (e) {
 			return {};
@@ -137,11 +139,7 @@ export class CWDComments {
 			}
 
 			// 检查域名限制
-			if (
-				serverConfig.allowedDomains &&
-				serverConfig.allowedDomains.length > 0 &&
-				typeof window !== 'undefined'
-			) {
+			if (serverConfig.allowedDomains && serverConfig.allowedDomains.length > 0 && typeof window !== 'undefined') {
 				const currentHostname = window.location.hostname;
 				const isAllowed = serverConfig.allowedDomains.some((domain) => {
 					return currentHostname === domain || currentHostname.endsWith('.' + domain);
@@ -169,6 +167,8 @@ export class CWDComments {
 				this.config.adminBadge = serverConfig.adminBadge;
 			}
 			this.config.requireReview = !!serverConfig.requireReview;
+			this.config.enableCommentLike = serverConfig.enableCommentLike;
+			this.config.enableArticleLike = serverConfig.enableArticleLike;
 
 			const api = createApiClient(this.config);
 			this.api = api;
@@ -177,7 +177,7 @@ export class CWDComments {
 					this.config,
 					api.fetchComments.bind(api),
 					api.submitComment.bind(api),
-					typeof api.likeComment === 'function' ? api.likeComment.bind(api) : undefined
+					typeof api.likeComment === 'function' ? api.likeComment.bind(api) : undefined,
 				);
 
 				this.unsubscribe = this.store.store.subscribe((state) => {
@@ -195,10 +195,7 @@ export class CWDComments {
 			if (this.api && typeof this.api.getLikeStatus === 'function') {
 				try {
 					const likeResult = await this.api.getLikeStatus();
-					const count =
-						likeResult && typeof likeResult.totalLikes === 'number'
-							? likeResult.totalLikes
-							: 0;
+					const count = likeResult && typeof likeResult.totalLikes === 'number' ? likeResult.totalLikes : 0;
 					const liked = !!(likeResult && likeResult.liked);
 					this.likeState.count = count;
 					this.likeState.liked = liked;
@@ -206,8 +203,7 @@ export class CWDComments {
 						this.store.setLikeState(count, liked);
 					}
 					this._updateLikeButton();
-				} catch (e) {
-				}
+				} catch (e) {}
 			}
 		})();
 
@@ -263,7 +259,7 @@ export class CWDComments {
 		}
 
 		const state = this.store.store.getState();
- 
+
 		// 创建错误提示
 		const existingError = this.mountPoint.querySelector('.cwd-error-inline');
 		if (state.error) {
@@ -311,20 +307,21 @@ export class CWDComments {
 		if (!header) {
 			header = document.createElement('div');
 			header.className = 'cwd-comments-header';
+			const showArticleLike = this.config.enableArticleLike !== false;
 			header.innerHTML = `
-        <h3 class="cwd-comments-count">
-          共 <span class="cwd-comments-count-number">0</span> 条评论
-        </h3>
-        <div class="cwd-like">
+				<div class="cwd-like" ${showArticleLike ? '' : 'style="display: none;"'}>
           <button type="button" class="cwd-like-button" data-liked="false">
             <span class="cwd-like-icon-wrapper">
               <svg class="cwd-like-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 21c-.4 0-.8-.1-1.1-.4L4.5 15C3 13.6 2 11.7 2 9.6 2 6.5 4.5 4 7.6 4c1.7 0 3.3.8 4.4 2.1C13.1 4.8 14.7 4 16.4 4 19.5 4 22 6.5 22 9.6c0 2.1-1 4-2.5 5.4l-6.4 5.6c-.3.3-.7.4-1.1.4z"></path>
               </svg>
             </span>
-            <span class="cwd-like-count">0</span>
+						<div>已有 <span class="cwd-like-count">0</span>人喜欢~ </div>
           </button>
         </div>
+        <h3 class="cwd-comments-count">
+          共 <span class="cwd-comments-count-number">0</span> 条评论
+        </h3>
       `;
 			this.mountPoint.appendChild(header);
 		}
@@ -349,7 +346,7 @@ export class CWDComments {
 				onSubmit: () => this._handleSubmit(),
 				onFieldChange: (field, value) => this.store.updateFormField(field, value),
 				adminEmail: this.config.adminEmail,
-				onVerifyAdmin: (key) => this.api.verifyAdminKey(key)
+				onVerifyAdmin: (key) => this.api.verifyAdminKey(key),
 			});
 			this.commentForm.render();
 		}
@@ -371,6 +368,7 @@ export class CWDComments {
 				submitting: state.submitting,
 				adminEmail: this.config.adminEmail,
 				adminBadge: this.config.adminBadge,
+				enableCommentLike: this.config.enableCommentLike !== false,
 				onRetry: () => this.store.loadComments(),
 				onReply: (commentId) => this.store.startReply(commentId),
 				onSubmitReply: (commentId) => this.store.submitReply(commentId),
@@ -380,9 +378,9 @@ export class CWDComments {
 				onPrevPage: () => this.store.goToPage(state.pagination.page - 1),
 				onNextPage: () => this.store.goToPage(state.pagination.page + 1),
 				onGoToPage: (page) => this.store.goToPage(page),
-				onLikeComment: (commentId) => {
+				onLikeComment: (commentId, isLike) => {
 					if (this.store && typeof this.store.likeComment === 'function') {
-						this.store.likeComment(commentId);
+						this.store.likeComment(commentId, isLike);
 					}
 				},
 			});
@@ -415,7 +413,7 @@ export class CWDComments {
 				form: state.form,
 				formErrors: state.formErrors,
 				submitting: state.submitting,
-				adminEmail: this.config.adminEmail
+				adminEmail: this.config.adminEmail,
 			});
 		}
 
@@ -564,10 +562,7 @@ export class CWDComments {
 		if (!this.shadowRoot) {
 			return;
 		}
-		const rawUrl =
-			this.config && typeof this.config.customCssUrl === 'string'
-				? this.config.customCssUrl
-				: '';
+		const rawUrl = this.config && typeof this.config.customCssUrl === 'string' ? this.config.customCssUrl : '';
 		const url = rawUrl.trim();
 		if (!url) {
 			if (this.customStyleElement && this.customStyleElement.parentNode) {
@@ -624,10 +619,7 @@ export class CWDComments {
 		}
 		const state = this.store?.store?.getState();
 		const liked = state ? !!state.liked : this.likeState.liked;
-		const count =
-			state && typeof state.likeCount === 'number'
-				? state.likeCount
-				: this.likeState.count;
+		const count = state && typeof state.likeCount === 'number' ? state.likeCount : this.likeState.count;
 		this.likeState.count = count;
 		this.likeState.liked = liked;
 		this._likeButtonEl.dataset.liked = liked ? 'true' : 'false';
@@ -650,10 +642,7 @@ export class CWDComments {
 			return;
 		}
 		const currentState = this.store?.store?.getState();
-		const currentCount =
-			currentState && typeof currentState.likeCount === 'number'
-				? currentState.likeCount
-				: this.likeState.count;
+		const currentCount = currentState && typeof currentState.likeCount === 'number' ? currentState.likeCount : this.likeState.count;
 		const wasLiked = currentState ? !!currentState.liked : this.likeState.liked;
 		if (wasLiked) {
 			return;
@@ -669,10 +658,7 @@ export class CWDComments {
 		this.api
 			.likePage()
 			.then((result) => {
-				const total =
-					result && typeof result.totalLikes === 'number'
-						? result.totalLikes
-						: nextCount;
+				const total = result && typeof result.totalLikes === 'number' ? result.totalLikes : nextCount;
 				const liked = !!(result && result.liked);
 				this.likeState.count = total;
 				this.likeState.liked = liked;

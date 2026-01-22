@@ -97,10 +97,41 @@ export class Component {
    * @returns {HTMLElement}
    */
   createElement(tag, options = {}) {
-    const el = document.createElement(tag);
+    const svgTags = new Set([
+      'svg',
+      'path',
+      'circle',
+      'rect',
+      'line',
+      'polyline',
+      'polygon',
+      'ellipse',
+      'g',
+      'defs',
+      'clipPath',
+      'mask',
+      'pattern',
+      'text',
+      'tspan',
+      'use',
+      'symbol',
+      'linearGradient',
+      'radialGradient',
+      'stop',
+      'filter'
+    ]);
+
+    const isSvgTag = svgTags.has(String(tag).toLowerCase());
+    const el = isSvgTag
+      ? document.createElementNS('http://www.w3.org/2000/svg', tag)
+      : document.createElement(tag);
 
     if (options.className) {
-      el.className = options.className;
+      if (isSvgTag) {
+        el.setAttribute('class', options.className);
+      } else {
+        el.className = options.className;
+      }
     }
 
     if (options.attributes) {

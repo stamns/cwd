@@ -99,6 +99,13 @@
           </li>
           <li
             class="menu-item"
+            :class="{ active: isRouteActive('feature-settings') }"
+            @click="goFeatureSettings"
+          >
+            功能开关
+          </li>
+          <li
+            class="menu-item"
             :class="{ active: isRouteActive('data') }"
             @click="goData"
           >
@@ -202,6 +209,11 @@ function goData() {
 
 function goSettings() {
   router.push({ name: "settings" });
+  closeSider();
+}
+
+function goFeatureSettings() {
+  router.push({ name: "feature-settings" });
   closeSider();
 }
 

@@ -178,7 +178,7 @@ export function createApiClient(config) {
         return response.json();
     }
 
-    async function likeComment(commentId) {
+    async function likeComment(commentId, isLike = true) {
         const id =
             typeof commentId === 'number'
                 ? commentId
@@ -188,8 +188,9 @@ export function createApiClient(config) {
         if (!Number.isFinite(id) || id <= 0) {
             throw new Error('Invalid comment id');
         }
+        const method = isLike ? 'POST' : 'DELETE';
         const response = await fetch(`${baseUrl}/api/comments/like`, {
-            method: 'POST',
+            method,
             headers: {
                 'Content-Type': 'application/json'
             },

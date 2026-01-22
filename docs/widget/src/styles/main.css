@@ -40,11 +40,7 @@
 }
 
 .cwd-comments-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 16px 0;
-  margin-bottom: 16px;
   border-bottom: 1px solid var(--cwd-border);
 }
 
@@ -517,17 +513,23 @@
 .cwd-like {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  padding: 30px 15px;
 }
 
 .cwd-like-button {
   display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
+  text-align: center;
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid var(--cwd-border-light, #eaeef2);
+  border: none;
   background: var(--cwd-bg-secondary, #f6f8fa);
+  background: none;
   color: var(--cwd-text-secondary, #6e7781);
   cursor: pointer;
   font-size: 13px;
@@ -536,8 +538,8 @@
 }
 
 .cwd-like-button[data-liked='true'] {
-  background: rgba(9, 105, 218, 0.08);
-  border-color: var(--cwd-primary, #0969da);
+  /* background: rgba(9, 105, 218, 0.08); */
+  /* border-color: var(--cwd-primary, #0969da); */
   color: var(--cwd-primary, #0969da);
 }
 
@@ -554,14 +556,14 @@
 }
 
 .cwd-like-icon {
-  width: 18px;
-  height: 18px;
+  width: 32px;
+  height: 32px;
   fill: currentColor;
 }
 
 .cwd-like-count {
-  min-width: 1.5em;
-  text-align: right;
+  text-align: center;
+  font-size: 1rem;
 }
 
 .cwd-like-animate .cwd-like-icon {
@@ -589,18 +591,18 @@
 .cwd-comment-like {
   display: flex;
   align-items: center;
-
-  display: none;
 }
 
 .cwd-comment-like-button {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
+  /* gap: 4px; */
+  /* padding: 2px 8px; */
+  /* border-radius: 999px; */
   border: 1px solid var(--cwd-border-light, #eaeef2);
+  border: 1px solid transparent;
   background: var(--cwd-bg-secondary, #f6f8fa);
+  background: none;
   color: var(--cwd-text-secondary, #6e7781);
   cursor: pointer;
   font-size: 12px;
@@ -609,8 +611,8 @@
 }
 
 .cwd-comment-like-button:hover {
-  background: rgba(9, 105, 218, 0.08);
-  border-color: var(--cwd-primary, #0969da);
+  /* background: rgba(9, 105, 218, 0.08);
+  border-color: var(--cwd-primary, #0969da); */
   color: var(--cwd-primary, #0969da);
 }
 
@@ -627,7 +629,9 @@
 }
 
 .cwd-comment-like-count {
-  min-width: 1.5em;
+  /* min-width: 1.5em; */
+  white-space: nowrap;
+  padding-left: 5px;
   text-align: right;
 }
 

@@ -123,6 +123,11 @@ export type LikeStatsResponse = {
 	items: LikeStatsItem[];
 };
 
+export type FeatureSettingsResponse = {
+	enableCommentLike: boolean;
+	enableArticleLike: boolean;
+};
+
 export async function loginAdmin(name: string, password: string): Promise<string> {
 	const res = await post<AdminLoginResponse>('/admin/login', { name, password });
 	const key = res.data.key;
@@ -288,4 +293,15 @@ export function fetchDomainList(): Promise<DomainListResponse> {
 
 export function fetchLikeStats(): Promise<LikeStatsResponse> {
 	return get<LikeStatsResponse>('/admin/likes/stats');
+}
+
+export function fetchFeatureSettings(): Promise<FeatureSettingsResponse> {
+	return get<FeatureSettingsResponse>('/admin/settings/features');
+}
+
+export function saveFeatureSettings(data: {
+	enableCommentLike?: boolean;
+	enableArticleLike?: boolean;
+}): Promise<{ message: string }> {
+	return put<{ message: string }>('/admin/settings/features', data);
 }

@@ -31,6 +31,7 @@ export class CommentList extends Component {
    * @param {Function} props.onGoToPage - 跳转页码回调
    * @param {string} props.adminEmail - 博主邮箱（可选）
    * @param {string} props.adminBadge - 博主标识文字（可选）
+   * @param {boolean} props.enableCommentLike - 是否开启评论点赞
    */
   constructor(container, props = {}) {
     super(container, props);
@@ -96,6 +97,7 @@ export class CommentList extends Component {
           submitting: this.props.submitting,
           adminEmail: this.props.adminEmail,
           adminBadge: this.props.adminBadge,
+          enableCommentLike: this.props.enableCommentLike,
           onReply: (commentId) => this.handleReply(commentId),
           onSubmitReply: (commentId) => this.handleSubmitReply(commentId),
           onCancelReply: () => this.handleCancelReply(),

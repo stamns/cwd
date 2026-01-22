@@ -177,7 +177,7 @@ export function createCommentStore(config, fetchComments, submitComment, likeCom
 		});
 	}
 
-	async function likeComment(commentId) {
+	async function likeComment(commentId, isLike = true) {
 		const state = store.getState();
 		if (!likeCommentFn || state.commentLikeLoadingId === commentId) {
 			return;
@@ -196,6 +196,7 @@ export function createCommentStore(config, fetchComments, submitComment, likeCom
 		});
 		try {
 			const safeComments = Array.isArray(state.comments) ? state.comments : [];
+			const delta = isLike ? 1 : -1;
 			const nextComments = safeComments.map((item) => {
 				if (!item || typeof item.id !== 'number') {
 					return item;
@@ -205,9 +206,10 @@ export function createCommentStore(config, fetchComments, submitComment, likeCom
 						typeof item.likes === 'number' && Number.isFinite(item.likes) && item.likes >= 0
 							? item.likes
 							: 0;
+					const nextLikes = Math.max(0, current + delta);
 					return {
 						...item,
-						likes: current + 1,
+						likes: nextLikes,
 					};
 				}
 				if (Array.isArray(item.replies) && item.replies.length > 0) {
@@ -220,9 +222,10 @@ export function createCommentStore(config, fetchComments, submitComment, likeCom
 								typeof reply.likes === 'number' && Number.isFinite(reply.likes) && reply.likes >= 0
 									? reply.likes
 									: 0;
+							const nextLikes = Math.max(0, current + delta);
 							return {
 								...reply,
-								likes: current + 1,
+								likes: nextLikes,
 							};
 						}
 						return reply;
@@ -237,7 +240,7 @@ export function createCommentStore(config, fetchComments, submitComment, likeCom
 			store.setState({
 				comments: nextComments,
 			});
-			await likeCommentFn(id);
+			await likeCommentFn(id, isLike);
 		} catch (e) {
 		} finally {
 			const latest = store.getState();
