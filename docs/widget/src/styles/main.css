@@ -976,3 +976,9 @@
 .cwd-btn-text:hover {
   color: var(--cwd-primary);
 }
+
+.cwd-admin-badge.cwd-admin-badge-icon {
+  background: transparent;
+  padding: 0;
+  color: #db850d;
+}

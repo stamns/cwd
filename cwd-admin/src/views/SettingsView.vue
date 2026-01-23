@@ -22,7 +22,7 @@
           <input v-model="commentAdminEmail" class="form-input" type="email" />
         </div>
         <div class="form-item">
-          <label class="form-label">博主标签文字</label>
+          <label class="form-label">博主标签文字（留空使用默认图标）</label>
           <input v-model="commentAdminBadge" class="form-input" type="text" />
         </div>
         <div class="form-item">
@@ -468,7 +468,7 @@ async function load() {
     ]);
     email.value = notifyRes.email || "";
     commentAdminEmail.value = commentRes.adminEmail || "";
-    commentAdminBadge.value = commentRes.adminBadge || "博主";
+    commentAdminBadge.value = commentRes.adminBadge ?? "";
     avatarPrefix.value = commentRes.avatarPrefix || "";
     commentAdminEnabled.value = !!commentRes.adminEnabled;
     allowedDomains.value = commentRes.allowedDomains

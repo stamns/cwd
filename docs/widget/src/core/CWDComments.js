@@ -163,7 +163,7 @@ export class CWDComments {
 			if (serverConfig.adminEmail) {
 				this.config.adminEmail = serverConfig.adminEmail;
 			}
-			if (serverConfig.adminEnabled && serverConfig.adminBadge) {
+			if (serverConfig.adminEnabled) {
 				this.config.adminBadge = serverConfig.adminBadge;
 			}
 			this.config.requireReview = !!serverConfig.requireReview;
