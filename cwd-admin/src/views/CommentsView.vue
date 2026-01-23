@@ -22,7 +22,6 @@
           <div class="table-cell table-cell-author">用户</div>
           <div class="table-cell table-cell-content">评论信息</div>
           <div class="table-cell table-cell-path">评论地址</div>
-          <div class="table-cell table-cell-likes">点赞</div>
           <div class="table-cell table-cell-status">状态</div>
           <div class="table-cell table-cell-actions">操作</div>
         </div>
@@ -70,9 +69,6 @@
               >{{ item.postSlug }}</a
             >
           </div>
-          <div class="table-cell table-cell-likes">
-            <span class="cell-likes-number">{{ typeof item.likes === "number" && Number.isFinite(item.likes) && item.likes >= 0 ? item.likes : 0 }}</span>
-          </div>
           <div class="table-cell table-cell-status">
             <div class="cell-status-wrapper">
               <span class="cell-status" :class="`cell-status-${item.status}`">
@@ -85,6 +81,17 @@
               >
                 置顶
               </span>
+              <span class="cell-status cell-likes-number" v-if="item.likes !== 0"
+                >
+                <svg style="width:13px;" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M2 21h4V9H2v12zm20-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L13 1 7.59 6.41C7.22 6.78 7 7.3 7 7.83V19c0 1.1.9 2 2 2h8c.78 0 1.48-.45 1.82-1.11l3.02-7.05c.11-.23.16-.48.16-.74v-2z"></path></svg>
+                {{
+                  typeof item.likes === "number" &&
+                  Number.isFinite(item.likes) &&
+                  item.likes >= 0
+                    ? item.likes
+                    : 0
+                }}</span
+              >
             </div>
           </div>
           <div class="table-cell table-cell-actions">
@@ -692,7 +699,7 @@ watch(domainFilter, () => {
 }
 
 .table-cell-status {
-  width: 120px;
+  width: 180px;
   flex-shrink: 0;
   align-items: center;
 }
@@ -765,11 +772,6 @@ watch(domainFilter, () => {
   color: #57606a;
 }
 
-.cell-likes-number {
-  font-size: 13px;
-  color: #57606a;
-}
-
 .cell-author-wrapper {
   display: flex;
   align-items: flex-start;
@@ -795,6 +797,12 @@ watch(domainFilter, () => {
   font-weight: 500;
 }
 
+.cell-status-wrapper {
+  display: flex;
+  gap: 5px;
+  white-space: nowrap;
+}
+
 .cell-status-approved {
   color: #1a7f37;
   background-color: #e7f5eb;
@@ -808,6 +816,15 @@ watch(domainFilter, () => {
 .cell-status-rejected {
   color: #d1242f;
   background-color: #ffebe9;
+}
+
+.cell-likes-number {
+  color: #d1242f;
+  background-color: #ffebe9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .cell-pin-flag {
