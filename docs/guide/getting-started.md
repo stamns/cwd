@@ -30,14 +30,15 @@
 - 🔒 **禁止评论**：支持屏蔽 IP 和拉黑邮箱
 - 📧 **邮件通知**：集成各大邮箱厂商（逐步接入），支持自定义通知模板
 - 🔄 **评论迁移**：支持将其他评论系统的评论迁移到 CWD
+- 🎨 **外观设计**：优雅简洁的 UI 设计，支持自定义主题/黑夜模式等
 
 **评论端**
 ![](https://github.com/user-attachments/assets/6ac091d8-e349-4d40-9d68-485817f63236)
 
 **后台管理**
-![](https://github.com/user-attachments/assets/d2cd1d4d-f592-4ff5-9915-7ed0e2a0304b)
-![](https://github.com/user-attachments/assets/6c3586d8-a111-4c35-a099-91d670b9c04b)
-![](https://github.com/user-attachments/assets/97f35f06-a346-40ed-8ed4-24a9457bee33)
+![](https://github.com/user-attachments/assets/59ef1a42-75f7-4efa-8a0c-beae71322484)
+![](https://github.com/user-attachments/assets/2bffdfaf-4af4-4bd8-929f-a178bc4acb78)
+![](https://github.com/user-attachments/assets/37cff92b-d6c7-4d1e-a9dd-856bac6ec8d3)
 
 ## 前置要求
 
