@@ -509,6 +509,8 @@ export class CWDComments {
 			// 更新表单组件
 			if (this.commentForm) {
 				this.commentForm.state.localForm = { ...this.store.store.getState().form };
+				this.commentForm.state.showPreview = false;
+				this.commentForm.render();
 			}
 		}
 	}

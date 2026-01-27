@@ -5,6 +5,7 @@
 import { Component } from './Component.js';
 import { AdminAuthModal } from './AdminAuthModal.js';
 import { auth } from '../utils/auth.js';
+import { renderMarkdown } from '../utils/markdown.js';
 
 export class CommentForm extends Component {
 	/**
@@ -20,8 +21,17 @@ export class CommentForm extends Component {
 	 */
 	constructor(container, props = {}) {
 		super(container, props);
+		// 确保 localForm 的各个字段都有初始值
+		const initialForm = props.form || {};
 		this.state = {
-			localForm: { ...props.form },
+			localForm: {
+				name: initialForm.name || '',
+				email: initialForm.email || '',
+				url: initialForm.url || '',
+				content: initialForm.content || '',
+			},
+			activeTab: 'write', // 'write' | 'preview'
+			showPreview: false,
 		};
 		this.modal = null;
 	}
@@ -93,7 +103,6 @@ export class CommentForm extends Component {
 								this.createElement('textarea', {
 									className: `cwd-form-textarea ${formErrors.content ? 'cwd-input-error' : ''}`,
 									attributes: {
-										placeholder: '',
 										rows: 4,
 										disabled: submitting,
 										onInput: (e) => this.handleFieldChange('content', e.target.value),
@@ -110,6 +119,16 @@ export class CommentForm extends Component {
 					className: 'cwd-form-actions',
 					children: [
 						this.createElement('button', {
+							className: `cwd-btn cwd-btn-secondary cwd-btn-preview ${this.state.showPreview ? 'cwd-btn-active' : ''}`,
+							attributes: {
+								type: 'button',
+								disabled: submitting || !localForm.content?.trim(),
+								style: localForm.content?.trim() ? '' : 'display:none;',
+								onClick: () => this.togglePreview(),
+							},
+							text: this.state.showPreview ? '关闭' : '预览',
+						}),
+						this.createElement('button', {
 							className: 'cwd-btn cwd-btn-primary',
 							attributes: {
 								type: 'submit',
@@ -119,6 +138,23 @@ export class CommentForm extends Component {
 						}),
 					],
 				}),
+
+				// 预览区域
+				...(this.state.showPreview && localForm.content
+					? [
+							this.createElement('div', {
+								className: 'cwd-preview-container',
+								children: [
+									this.createTextElement('div', '预览效果：', 'cwd-preview-title'),
+									this.createElement('div', {
+										className: 'cwd-preview-content cwd-comment-content',
+										// 直接设置 innerHTML
+										html: renderMarkdown(localForm.content),
+									}),
+								],
+							}),
+						]
+					: []),
 			],
 		});
 
@@ -172,6 +208,24 @@ export class CommentForm extends Component {
 		if (submitBtn) {
 			submitBtn.disabled = submitting || !canSubmit;
 			submitBtn.textContent = submitting ? '提交中...' : '提交评论';
+		}
+
+		// 更新预览按钮状态
+		const previewBtn = this.elements.root.querySelector('.cwd-btn-preview');
+		if (previewBtn) {
+			const hasContent = !!localForm.content?.trim();
+			previewBtn.disabled = submitting || !hasContent;
+			previewBtn.style.display = hasContent ? '' : 'none';
+			if (!hasContent) {
+				this.state.showPreview = false;
+				const previewContainer = this.elements.root.querySelector('.cwd-preview-container');
+				if (previewContainer) {
+					previewContainer.remove();
+				}
+				previewBtn.textContent = '预览';
+			} else {
+				previewBtn.textContent = this.state.showPreview ? '关闭' : '预览';
+			}
 		}
 
 		// 更新输入框禁用状态
@@ -272,6 +326,11 @@ export class CommentForm extends Component {
 		if (contentTextarea) contentTextarea.value = form.content || '';
 	}
 
+	togglePreview() {
+		this.state.showPreview = !this.state.showPreview;
+		this.render();
+	}
+
 	handleFieldChange(field, value) {
 		this.state.localForm[field] = value;
 		if (this.props.onFieldChange) {
@@ -280,13 +339,29 @@ export class CommentForm extends Component {
 		// 实时更新按钮状态
 		if (this.elements.root) {
 			this.updateFormState();
+			// 实时更新预览内容
+			if (field === 'content' && this.state.showPreview) {
+				this.updatePreviewContent(value);
+			}
+		}
+	}
+
+	updatePreviewContent(content) {
+		const previewContent = this.elements.root.querySelector('.cwd-preview-content');
+		if (previewContent) {
+			previewContent.innerHTML = renderMarkdown(content);
 		}
 	}
 
 	handleSubmit(e) {
 		e.preventDefault();
+		const email = this.state.localForm.email?.trim();
+		const adminEmail = this.props.adminEmail;
+		if (adminEmail && email && email === adminEmail && !auth.hasToken()) {
+			this.showAuthModal();
+			return;
+		}
 		if (this.props.onSubmit) {
-			// 提交当前表单数据
 			this.props.onSubmit(this.state.localForm);
 		}
 	}

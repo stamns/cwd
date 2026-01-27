@@ -3,6 +3,7 @@
  */
 
 import { Component } from './Component.js';
+import { renderMarkdown } from '../utils/markdown.js';
 
 export class ReplyEditor extends Component {
   /**
@@ -23,7 +24,8 @@ export class ReplyEditor extends Component {
     this.state = {
       content: props.content || '',
       // 如果没有昵称或邮箱，显示用户信息输入框。且一旦显示，在当前编辑器生命周期内保持显示，避免输入过程中消失
-      showUserInfo: !currentUser || !currentUser.name || !currentUser.email
+      showUserInfo: !currentUser || !currentUser.name || !currentUser.email,
+      showPreview: false,
     };
   }
 
@@ -70,10 +72,10 @@ export class ReplyEditor extends Component {
           className: 'cwd-reply-textarea',
           attributes: {
             rows: 3,
-            placeholder: '写下你的回复...',
+            placeholder: '支持 Markdown 格式',
             disabled: this.props.submitting,
-            onInput: (e) => this.handleInput(e)
-          }
+            onInput: (e) => this.handleInput(e),
+          },
         }),
 
         // 错误提示
@@ -99,6 +101,15 @@ export class ReplyEditor extends Component {
           className: 'cwd-reply-actions',
           children: [
             this.createElement('button', {
+              className: `cwd-btn cwd-btn-secondary cwd-btn-small cwd-btn-preview ${this.state.showPreview ? 'cwd-btn-active' : ''}`,
+              attributes: {
+                type: 'button',
+                disabled: this.props.submitting || !this.state.content.trim(),
+                onClick: () => this.togglePreview(),
+              },
+              text: this.state.showPreview ? '关闭' : '预览',
+            }),
+            this.createElement('button', {
               className: 'cwd-btn cwd-btn-primary cwd-btn-small',
               attributes: {
                 type: 'button',
@@ -117,7 +128,24 @@ export class ReplyEditor extends Component {
               text: '取消'
             })
           ]
-        })
+        }),
+
+        // 预览区域
+        ...(this.state.showPreview && this.state.content
+          ? [
+              this.createElement('div', {
+                className: 'cwd-preview-container',
+                children: [
+                  this.createTextElement('div', '预览效果：', 'cwd-preview-title'),
+                  this.createElement('div', {
+                    className: 'cwd-preview-content cwd-comment-content',
+                    // 直接设置 innerHTML
+                    html: renderMarkdown(this.state.content),
+                  }),
+                ],
+              }),
+            ]
+          : []),
       ]
     });
 
@@ -159,15 +187,40 @@ export class ReplyEditor extends Component {
     }
   }
 
+  togglePreview() {
+    this.state.showPreview = !this.state.showPreview;
+    this.render();
+  }
+
   handleInput(e) {
     this.state.content = e.target.value;
+    
     // 更新提交按钮的禁用状态
     const submitBtn = this.elements.root?.querySelector('.cwd-btn-primary');
     if (submitBtn) {
       submitBtn.disabled = this.props.submitting || !this.state.content.trim();
     }
+
+    // 更新预览按钮的禁用状态
+    const previewBtn = this.elements.root?.querySelector('.cwd-btn-preview');
+    if (previewBtn) {
+      previewBtn.disabled = this.props.submitting || !this.state.content.trim();
+    }
+
     if (this.props.onUpdate) {
       this.props.onUpdate(this.state.content);
+    }
+
+    // 实时更新预览内容
+    if (this.state.showPreview) {
+      this.updatePreviewContent(this.state.content);
+    }
+  }
+
+  updatePreviewContent(content) {
+    const previewContent = this.elements.root?.querySelector('.cwd-preview-content');
+    if (previewContent) {
+      previewContent.innerHTML = renderMarkdown(content);
     }
   }
 
