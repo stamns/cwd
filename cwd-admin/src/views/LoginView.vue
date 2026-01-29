@@ -1,8 +1,11 @@
 <template>
   <div class="login-page">
     <div class="login-card">
-      <h1 class="login-title">CWD 评论系统</h1>
-      <p class="login-subtitle">简洁的自托管评论系统管理面板</p>
+      <img class="login-icon" src="https://cwd.js.org/icon.png" alt="icon" />
+      <div class="login-subtitle">
+        <h1 class="login-title">CWD</h1>
+        - 简洁的自托管评论系统管理面板
+      </div>
       <form class="login-form" @submit.prevent="handleSubmit">
         <div class="form-item">
           <label class="form-label">API 地址</label>
@@ -14,12 +17,61 @@
         </div>
         <div class="form-item">
           <label class="form-label">密码</label>
-          <input
-            v-model="password"
-            class="form-input"
-            type="password"
-            autocomplete="current-password"
-          />
+          <div class="form-input-wrapper">
+            <input
+              v-model="password"
+              class="form-input"
+              :type="showPassword ? 'text' : 'password'"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+              @click="showPassword = !showPassword"
+            >
+              <svg
+                v-if="!showPassword"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-eye-icon lucide-eye"
+              >
+                <path
+                  d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
+                />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-eye-off-icon lucide-eye-off"
+              >
+                <path
+                  d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
+                />
+                <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+                <path
+                  d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
+                />
+                <path d="m2 2 20 20" />
+              </svg>
+            </button>
+          </div>
         </div>
         <div v-if="error" class="form-error">{{ error }}</div>
         <button class="form-button" type="submit" :disabled="submitting">
@@ -28,6 +80,9 @@
         </button>
       </form>
     </div>
+    <!-- <div class="login-link">
+      <a href="https://github.com/anghunk/cwd" target="_blank">Github</a>
+    </div> -->
   </div>
 </template>
 
@@ -41,6 +96,7 @@ const defaultAdminName = (import.meta.env.VITE_ADMIN_NAME || "").trim();
 const defaultAdminPassword = (import.meta.env.VITE_ADMIN_PASSWORD || "").trim();
 const name = ref(defaultAdminName);
 const password = ref(defaultAdminPassword);
+const showPassword = ref(false);
 const submitting = ref(false);
 const error = ref("");
 const apiBaseUrl = ref("");
@@ -84,10 +140,13 @@ async function handleSubmit() {
 <style scoped>
 .login-page {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   min-height: 100vh;
-  padding: 24px 16px;
+  padding: 10px;
+  box-sizing: border-box;
   background: var(--bg-body);
   background: radial-gradient(circle at top, var(--bg-hover) 0, var(--bg-body) 100%);
 }
@@ -103,15 +162,25 @@ async function handleSubmit() {
   box-sizing: border-box;
 }
 
+.login-icon {
+  max-width: 80px;
+  display: block;
+  margin: 0 auto;
+  margin-bottom: 10px;
+}
+
 .login-title {
   margin: 0;
-  font-size: 24px;
+  font-size: inherit;
   text-align: center;
   color: var(--text-primary);
   letter-spacing: 0.03em;
 }
 
 .login-subtitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 8px 0 28px;
   font-size: 13px;
   text-align: center;
@@ -152,6 +221,40 @@ async function handleSubmit() {
   box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
 }
 
+.form-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.form-input-wrapper .form-input {
+  width: 100%;
+  padding-right: 38px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0;
+}
+
+.password-toggle:hover {
+  color: var(--text-primary);
+}
+
+.password-toggle svg {
+  width: 16px;
+}
+
 .form-error {
   font-size: 13px;
   color: var(--color-danger);
@@ -161,7 +264,7 @@ async function handleSubmit() {
 .form-button {
   margin-top: 8px;
   padding: 10px 0;
-  border-radius: 999px;
+  border-radius: 30px;
   border: none;
   background: var(--primary-color);
   color: var(--text-inverse);
@@ -190,5 +293,24 @@ async function handleSubmit() {
 .form-button:not(:disabled):active {
   transform: translateY(0);
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.26);
+}
+
+.login-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  gap: 10px;
+}
+
+.login-link a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.login-link a:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
 }
 </style>

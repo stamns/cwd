@@ -281,6 +281,9 @@ function handleLogoutFromActions() {
 </script>
 
 <style scoped>
+* {
+  box-sizing: border-box;
+}
 ::-webkit-scrollbar {
   width: 8px;
   height: 6px;
