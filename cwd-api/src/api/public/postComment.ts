@@ -267,9 +267,6 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
 
           if (defaultStatus === 'pending') {
             buttons.push({ text: "批准", callback_data: `approve:${commentId}` });
-            buttons.push({ text: "删除", callback_data: `delete:${commentId}` });
-          } else {
-            buttons.push({ text: "删除", callback_data: `delete:${commentId}` });
           }
 
           const message = `
@@ -283,11 +280,14 @@ ${contentText}
 #ID:${commentId}
           `.trim();
 
-          await sendTelegramMessage(tgSettings.botToken, tgSettings.chatId, message, {
-            reply_markup: {
+          const options: any = {};
+          if (buttons.length > 0) {
+            options.reply_markup = {
               inline_keyboard: [buttons]
-            }
-          });
+            };
+          }
+
+          await sendTelegramMessage(tgSettings.botToken, tgSettings.chatId, message, options);
         }
       } catch (tgError) {
         console.error('Telegram Notification Failed:', tgError);

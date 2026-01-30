@@ -44,11 +44,7 @@ async function handleCallbackQuery(c: Context<{ Bindings: Bindings }>, token: st
 		const newText = message.text + '\n\n✅ 已批准 (Approved)';
 		await editMessageText(token, chatId, messageId, newText);
 		await answerCallbackQuery(token, id, '评论已批准');
-	} else if (action === 'delete') {
-		await c.env.CWD_DB.prepare('DELETE FROM Comment WHERE id = ?').bind(commentId).run();
-
-		const newText = message.text + '\n\n🗑️ 已删除 (Deleted)';
-		await editMessageText(token, chatId, messageId, newText);
-		await answerCallbackQuery(token, id, '评论已删除');
+	} else {
+		await answerCallbackQuery(token, id, '当前仅支持审核操作');
 	}
 }
