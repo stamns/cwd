@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import LoginView from '../views/LoginView.vue';
-import LayoutView from '../views/LayoutView.vue';
-import CommentsView from '../views/CommentsView.vue';
-import SettingsView from '../views/SettingsView.vue';
-import DataView from '../views/DataView.vue';
-import StatsView from '../views/StatsView.vue';
-import AnalyticsVisitView from '../views/AnalyticsVisitView.vue';
+import LoginView from '../views/LoginView/index.vue';
+import LayoutView from '../views/LayoutView/index.vue';
+import CommentsView from '../views/CommentsView/index.vue';
+import SettingsView from '../views/SettingsView/index.vue';
+import DataView from '../views/DataView/index.vue';
+import StatsView from '../views/StatsView/index.vue';
+import AnalyticsVisitView from '../views/AnalyticsVisitView/index.vue';
 
 const routes: RouteRecordRaw[] = [
 	{
