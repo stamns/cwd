@@ -114,12 +114,37 @@
   width: 180px;
   background-color: var(--bg-sider);
   border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
 }
 
 .menu {
   list-style: none;
   margin: 0;
   padding: 12px 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.layout-sider-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-align: center;
+  line-height: 1.5;
+  cursor: pointer;
+  user-select: none;
+}
+
+.layout-sider-footer:hover {
+  background-color: var(--bg-hover);
+}
+
+.layout-sider-footer-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .menu-item {

@@ -42,9 +42,6 @@
         </button>
       </form>
     </div>
-    <!-- <div class="login-link">
-      <a href="https://github.com/anghunk/cwd" target="_blank">Github</a>
-    </div> -->
   </div>
 </template>
 

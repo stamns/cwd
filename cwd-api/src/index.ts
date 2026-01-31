@@ -2,11 +2,7 @@ import { Hono } from 'hono';
 import { Bindings } from './bindings';
 import { customCors } from './utils/cors';
 import { adminAuth } from './utils/auth';
-import {
-	isValidEmail,
-	loadEmailNotificationSettings,
-	saveEmailNotificationSettings
-} from './utils/email';
+import { isValidEmail, loadEmailNotificationSettings, saveEmailNotificationSettings } from './utils/email';
 import { loadFeatureSettings } from './utils/featureSettings';
 import packageJson from '../../package.json';
 
@@ -18,12 +14,6 @@ import { deleteComment } from './api/admin/deleteComment';
 import { listComments } from './api/admin/listComments';
 import { exportComments } from './api/admin/exportComments';
 import { importComments } from './api/admin/importComments';
-import { exportConfig } from './api/admin/exportConfig';
-import { importConfig } from './api/admin/importConfig';
-import { exportStats } from './api/admin/exportStats';
-import { importStats } from './api/admin/importStats';
-import { exportBackup } from './api/admin/exportBackup';
-import { importBackup } from './api/admin/importBackup';
 import { exportConfig } from './api/admin/exportConfig';
 import { importConfig } from './api/admin/importConfig';
 import { exportStats } from './api/admin/exportStats';
@@ -43,20 +33,12 @@ import { getLikeStatus, likePage } from './api/public/like';
 import { likeComment } from './api/public/likeComment';
 import { listLikes } from './api/admin/listLikes';
 import { getLikeStats } from './api/admin/likeStats';
-import {
-	getFeatureSettings,
-	updateFeatureSettings
-} from './api/admin/featureSettings';
-import {
-	getTelegramSettings,
-	updateTelegramSettings,
-	setupTelegramWebhook,
-	testTelegramMessage
-} from './api/admin/telegramSettings';
+import { getFeatureSettings, updateFeatureSettings } from './api/admin/featureSettings';
+import { getTelegramSettings, updateTelegramSettings, setupTelegramWebhook, testTelegramMessage } from './api/admin/telegramSettings';
 import { telegramWebhook } from './api/telegram/webhook';
 
 const app = new Hono<{ Bindings: Bindings }>();
-const VERSION = `v${packageJson.version}`;
+const VERSION = `${packageJson.version}`;
 
 const COMMENT_ADMIN_EMAIL_KEY = 'comment_admin_email';
 const COMMENT_ADMIN_BADGE_KEY = 'comment_admin_badge';
@@ -68,11 +50,8 @@ const COMMENT_REQUIRE_REVIEW_KEY = 'comment_require_review';
 const COMMENT_BLOCKED_IPS_KEY = 'comment_blocked_ips';
 const COMMENT_BLOCKED_EMAILS_KEY = 'comment_blocked_emails';
 
-
 async function loadCommentSettings(env: Bindings) {
-	await env.CWD_DB.prepare(
-		'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
-	).run();
+	await env.CWD_DB.prepare('CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)').run();
 	const keys = [
 		COMMENT_ADMIN_EMAIL_KEY,
 		COMMENT_ADMIN_BADGE_KEY,
@@ -82,11 +61,9 @@ async function loadCommentSettings(env: Bindings) {
 		COMMENT_ADMIN_KEY_HASH_KEY,
 		COMMENT_REQUIRE_REVIEW_KEY,
 		COMMENT_BLOCKED_IPS_KEY,
-		COMMENT_BLOCKED_EMAILS_KEY
+		COMMENT_BLOCKED_EMAILS_KEY,
 	];
-	const { results } = await env.CWD_DB.prepare(
-		'SELECT key, value FROM Settings WHERE key IN (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-	)
+	const { results } = await env.CWD_DB.prepare('SELECT key, value FROM Settings WHERE key IN (?, ?, ?, ?, ?, ?, ?, ?, ?)')
 		.bind(...keys)
 		.all<{ key: string; value: string }>();
 
@@ -105,18 +82,27 @@ async function loadCommentSettings(env: Bindings) {
 
 	const blockedIpsRaw = map.get(COMMENT_BLOCKED_IPS_KEY) ?? '';
 	const blockedIps = blockedIpsRaw
-		? blockedIpsRaw.split(',').map((d) => d.trim()).filter(Boolean)
+		? blockedIpsRaw
+				.split(',')
+				.map((d) => d.trim())
+				.filter(Boolean)
 		: [];
 
 	const blockedEmailsRaw = map.get(COMMENT_BLOCKED_EMAILS_KEY) ?? '';
 	const blockedEmails = blockedEmailsRaw
-		? blockedEmailsRaw.split(',').map((d) => d.trim()).filter(Boolean)
+		? blockedEmailsRaw
+				.split(',')
+				.map((d) => d.trim())
+				.filter(Boolean)
 		: [];
 
 	// 解析允许的域名列表
 	const allowedDomainsRaw = map.get(COMMENT_ALLOWED_DOMAINS_KEY) ?? '';
 	const allowedDomains = allowedDomainsRaw
-		? allowedDomainsRaw.split(',').map((d) => d.trim()).filter(Boolean)
+		? allowedDomainsRaw
+				.split(',')
+				.map((d) => d.trim())
+				.filter(Boolean)
 		: [];
 
 	return {
@@ -129,7 +115,7 @@ async function loadCommentSettings(env: Bindings) {
 		blockedIps,
 		blockedEmails,
 		adminKey: map.get(COMMENT_ADMIN_KEY_HASH_KEY) ?? null,
-		adminKeySet: !!map.get(COMMENT_ADMIN_KEY_HASH_KEY)
+		adminKeySet: !!map.get(COMMENT_ADMIN_KEY_HASH_KEY),
 	};
 }
 
@@ -147,9 +133,7 @@ async function saveCommentSettings(
 		blockedEmails?: string[];
 	}
 ) {
-	await env.CWD_DB.prepare(
-		'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
-	).run();
+	await env.CWD_DB.prepare('CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)').run();
 
 	let adminKeyValue: string | undefined;
 	if (settings.adminKey !== undefined) {
@@ -162,38 +146,28 @@ async function saveCommentSettings(
 		{ key: COMMENT_AVATAR_PREFIX_KEY, value: settings.avatarPrefix },
 		{
 			key: COMMENT_ADMIN_ENABLED_KEY,
-			value:
-				typeof settings.adminEnabled === 'boolean'
-					? settings.adminEnabled
-						? '1'
-						: '0'
-					: undefined
+			value: typeof settings.adminEnabled === 'boolean' ? (settings.adminEnabled ? '1' : '0') : undefined,
 		},
 		{
 			key: COMMENT_ALLOWED_DOMAINS_KEY,
-			value: settings.allowedDomains ? settings.allowedDomains.join(',') : undefined
+			value: settings.allowedDomains ? settings.allowedDomains.join(',') : undefined,
 		},
 		{
 			key: COMMENT_ADMIN_KEY_HASH_KEY,
-			value: adminKeyValue
+			value: adminKeyValue,
 		},
 		{
 			key: COMMENT_REQUIRE_REVIEW_KEY,
-			value:
-				typeof settings.requireReview === 'boolean'
-					? settings.requireReview
-						? '1'
-						: '0'
-					: undefined
+			value: typeof settings.requireReview === 'boolean' ? (settings.requireReview ? '1' : '0') : undefined,
 		},
 		{
 			key: COMMENT_BLOCKED_IPS_KEY,
-			value: settings.blockedIps ? settings.blockedIps.join(',') : undefined
+			value: settings.blockedIps ? settings.blockedIps.join(',') : undefined,
 		},
 		{
 			key: COMMENT_BLOCKED_EMAILS_KEY,
-			value: settings.blockedEmails ? settings.blockedEmails.join(',') : undefined
-		}
+			value: settings.blockedEmails ? settings.blockedEmails.join(',') : undefined,
+		},
 	];
 
 	for (const entry of entries) {
@@ -201,9 +175,7 @@ async function saveCommentSettings(
 			const value = entry.value === null ? '' : entry.value;
 			const trimmed = typeof value === 'string' ? value.trim() : value;
 			if (trimmed) {
-				await env.CWD_DB.prepare('REPLACE INTO Settings (key, value) VALUES (?, ?)')
-					.bind(entry.key, trimmed)
-					.run();
+				await env.CWD_DB.prepare('REPLACE INTO Settings (key, value) VALUES (?, ?)').bind(entry.key, trimmed).run();
 			} else {
 				await env.CWD_DB.prepare('DELETE FROM Settings WHERE key = ?').bind(entry.key).run();
 			}
@@ -217,12 +189,12 @@ app.use('*', async (c, next) => {
 		path: c.req.path,
 		url: c.req.url,
 		hasDb: !!c.env.CWD_DB,
-		hasAuthKv: !!c.env.CWD_AUTH_KV
+		hasAuthKv: !!c.env.CWD_AUTH_KV,
 	});
 	const res = await next();
 	console.log('Request:end', {
 		method: c.req.method,
-		path: c.req.path
+		path: c.req.path,
 	});
 	return res;
 });
@@ -237,9 +209,8 @@ app.use('/admin/*', async (c, next) => {
 });
 
 app.get('/', (c) => {
-	return c.html(
-		`CWD 评论部署成功，当前版本 ${VERSION}，<a href="https://cdw.js.org" target="_blank" rel="noreferrer">查看文档</a>`
-	);
+	c.header('Access-Control-Allow-Origin', '*');
+	return c.json({ version: VERSION, data: '成功部署 CWD 评论系统 API！文档地址 https://cwd.js.org' });
 });
 
 app.get('/api/comments', getComments);
@@ -254,13 +225,7 @@ app.get('/api/config/comments', async (c) => {
 	try {
 		const settings = await loadCommentSettings(c.env);
 		const featureSettings = await loadFeatureSettings(c.env);
-		const {
-			adminKey,
-			adminKeySet,
-			blockedIps,
-			blockedEmails,
-			...publicSettings
-		} = settings as any;
+		const { adminKey, adminKeySet, blockedIps, blockedEmails, ...publicSettings } = settings as any;
 
 		return c.json({ ...publicSettings, ...featureSettings });
 	} catch (e: any) {
@@ -303,15 +268,14 @@ app.get('/admin/settings/email-notify', async (c) => {
 app.put('/admin/settings/email-notify', async (c) => {
 	try {
 		const body = await c.req.json();
-		const globalEnabled =
-			typeof body.globalEnabled === 'boolean' ? body.globalEnabled : undefined;
+		const globalEnabled = typeof body.globalEnabled === 'boolean' ? body.globalEnabled : undefined;
 		const smtp = body.smtp && typeof body.smtp === 'object' ? body.smtp : undefined;
 		const templates = body.templates && typeof body.templates === 'object' ? body.templates : undefined;
 
 		await saveEmailNotificationSettings(c.env, {
 			globalEnabled,
 			smtp,
-			templates
+			templates,
 		});
 
 		return c.json({ message: '保存成功' });
@@ -351,24 +315,12 @@ app.put('/admin/settings/comments', async (c) => {
 		const adminEmail = rawAdminEmail.trim();
 		const adminBadge = rawAdminBadge.trim();
 		const avatarPrefix = rawAvatarPrefix.trim();
-		const adminEnabled =
-			typeof rawAdminEnabled === 'boolean'
-				? rawAdminEnabled
-				: rawAdminEnabled === '1' || rawAdminEnabled === 1;
-		const allowedDomains = rawAllowedDomains
-			.map((d: any) => (typeof d === 'string' ? d.trim() : ''))
-			.filter(Boolean);
+		const adminEnabled = typeof rawAdminEnabled === 'boolean' ? rawAdminEnabled : rawAdminEnabled === '1' || rawAdminEnabled === 1;
+		const allowedDomains = rawAllowedDomains.map((d: any) => (typeof d === 'string' ? d.trim() : '')).filter(Boolean);
 		const adminKey = rawAdminKey; // Can be undefined or empty string
-		const requireReview =
-			typeof rawRequireReview === 'boolean'
-				? rawRequireReview
-				: rawRequireReview === '1' || rawRequireReview === 1;
-		const blockedIps = rawBlockedIps
-			.map((d: any) => (typeof d === 'string' ? d.trim() : ''))
-			.filter(Boolean);
-		const blockedEmails = rawBlockedEmails
-			.map((d: any) => (typeof d === 'string' ? d.trim() : ''))
-			.filter(Boolean);
+		const requireReview = typeof rawRequireReview === 'boolean' ? rawRequireReview : rawRequireReview === '1' || rawRequireReview === 1;
+		const blockedIps = rawBlockedIps.map((d: any) => (typeof d === 'string' ? d.trim() : '')).filter(Boolean);
+		const blockedEmails = rawBlockedEmails.map((d: any) => (typeof d === 'string' ? d.trim() : '')).filter(Boolean);
 
 		if (adminEmail && !isValidEmail(adminEmail)) {
 			return c.json({ message: '邮箱格式不正确' }, 400);
@@ -383,7 +335,7 @@ app.put('/admin/settings/comments', async (c) => {
 			adminKey,
 			requireReview,
 			blockedIps,
-			blockedEmails
+			blockedEmails,
 		});
 
 		return c.json({ message: '保存成功' });
@@ -402,9 +354,7 @@ app.post('/admin/comments/block-ip', async (c) => {
 			return c.json({ message: 'IP 地址不能为空' }, 400);
 		}
 
-		await c.env.CWD_DB.prepare(
-			'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
-		).run();
+		await c.env.CWD_DB.prepare('CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)').run();
 
 		const row = await c.env.CWD_DB.prepare('SELECT value FROM Settings WHERE key = ?')
 			.bind(COMMENT_BLOCKED_IPS_KEY)
@@ -412,17 +362,16 @@ app.post('/admin/comments/block-ip', async (c) => {
 
 		const existing = row?.value || '';
 		const list = existing
-			? existing.split(',').map((d) => d.trim()).filter(Boolean)
+			? existing
+					.split(',')
+					.map((d) => d.trim())
+					.filter(Boolean)
 			: [];
 
 		if (!list.includes(ip)) {
 			list.push(ip);
 			const joined = list.join(',');
-			await c.env.CWD_DB.prepare(
-				'REPLACE INTO Settings (key, value) VALUES (?, ?)'
-			)
-				.bind(COMMENT_BLOCKED_IPS_KEY, joined)
-				.run();
+			await c.env.CWD_DB.prepare('REPLACE INTO Settings (key, value) VALUES (?, ?)').bind(COMMENT_BLOCKED_IPS_KEY, joined).run();
 		}
 
 		return c.json({ message: '已加入 IP 黑名单' });
@@ -445,9 +394,7 @@ app.post('/admin/comments/block-email', async (c) => {
 			return c.json({ message: '邮箱格式不正确' }, 400);
 		}
 
-		await c.env.CWD_DB.prepare(
-			'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
-		).run();
+		await c.env.CWD_DB.prepare('CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)').run();
 
 		const row = await c.env.CWD_DB.prepare('SELECT value FROM Settings WHERE key = ?')
 			.bind(COMMENT_BLOCKED_EMAILS_KEY)
@@ -455,17 +402,16 @@ app.post('/admin/comments/block-email', async (c) => {
 
 		const existing = row?.value || '';
 		const list = existing
-			? existing.split(',').map((d) => d.trim()).filter(Boolean)
+			? existing
+					.split(',')
+					.map((d) => d.trim())
+					.filter(Boolean)
 			: [];
 
 		if (!list.includes(email)) {
 			list.push(email);
 			const joined = list.join(',');
-			await c.env.CWD_DB.prepare(
-				'REPLACE INTO Settings (key, value) VALUES (?, ?)'
-			)
-				.bind(COMMENT_BLOCKED_EMAILS_KEY, joined)
-				.run();
+			await c.env.CWD_DB.prepare('REPLACE INTO Settings (key, value) VALUES (?, ?)').bind(COMMENT_BLOCKED_EMAILS_KEY, joined).run();
 		}
 
 		return c.json({ message: '已加入邮箱黑名单' });

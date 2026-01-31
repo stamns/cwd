@@ -114,11 +114,53 @@
             数据管理
           </li>
         </ul>
+        <div class="layout-sider-footer" @click="openVersionModal">
+          <div class="layout-sider-footer-line">
+            <span>API {{ apiVersion }}</span>
+          </div>
+          <div class="layout-sider-footer-line">Admin {{ adminVersion }}</div>
+        </div>
       </nav>
       <div v-if="isMobileSiderOpen" class="layout-sider-mask" @click="closeSider" />
       <main class="layout-content">
         <router-view />
       </main>
+    </div>
+    <div v-if="versionModalVisible" class="modal-overlay" @click.self="closeVersionModal">
+      <div class="modal">
+        <h3 class="modal-title">版本信息</h3>
+        <div class="modal-body">
+          <p class="modal-row">
+            <span class="modal-label">API 地址</span>
+            <span class="modal-value">{{ checkedApiBaseUrl || "未配置" }}</span>
+          </p>
+          <p class="modal-row">
+            <span class="modal-label">接口版本</span>
+            <span class="modal-value">
+              {{ apiVersion || (apiVersionError ? "未获取到" : "加载中...") }}
+            </span>
+          </p>
+          <p class="modal-row">
+            <span class="modal-label">后台版本</span>
+            <span class="modal-value">{{ adminVersion }}</span>
+          </p>
+          <p v-if="apiVersion && apiVersion === adminVersion" class="modal-status">
+            当前后台与接口版本一致，可以正常使用。
+          </p>
+          <p v-else-if="apiVersion && apiVersion !== adminVersion" class="modal-status">
+            当前后台与接口版本不一致，推荐将 API 服务更新到与后台版本一致，
+            以避免潜在的兼容性问题。
+          </p>
+          <p v-else-if="apiVersionError" class="modal-status">
+            无法获取接口版本：{{ apiVersionError }}
+          </p>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn" type="button" @click="closeVersionModal">
+            我知道了
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -128,8 +170,10 @@ import { ref, onMounted, watch, provide, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { logoutAdmin, fetchDomainList } from "../../api/admin";
 import { useTheme } from "../../composables/useTheme";
+import packageJson from "../../../../package.json";
 
 const DOMAIN_STORAGE_KEY = "cwd_admin_domain_filter";
+const API_BASE_URL_KEY = "cwd_admin_api_base_url";
 
 const router = useRouter();
 const route = useRoute();
@@ -137,6 +181,11 @@ const { theme, setTheme } = useTheme();
 
 const isMobileSiderOpen = ref(false);
 const isActionsOpen = ref(false);
+const adminVersion = ref(packageJson.version || "0.0.0");
+const apiVersion = ref("");
+const checkedApiBaseUrl = ref("");
+const apiVersionError = ref("");
+const versionModalVisible = ref(false);
 
 const themeTitle = computed(() => {
   if (theme.value === "light") return "明亮模式";
@@ -171,10 +220,40 @@ async function loadDomains() {
   }
 }
 
+async function loadVersion() {
+  const baseUrl = (localStorage.getItem(API_BASE_URL_KEY) || "").trim();
+  if (!baseUrl) {
+    checkedApiBaseUrl.value = "";
+    apiVersionError.value = "";
+    return;
+  }
+  checkedApiBaseUrl.value = baseUrl;
+  apiVersionError.value = "";
+  try {
+    const res = await fetch(baseUrl);
+    const contentType = res.headers.get("content-type") || "";
+    if (!res.ok || !contentType.includes("application/json")) {
+      apiVersionError.value =
+        "当前 API 版本较旧，未提供版本信息接口。推荐后续升级到最新版本以获得完整的版本检测能力（不影响当前使用）。";
+      return;
+    }
+    const data = await res.json().catch(() => null);
+    if (data && typeof data.version === "string") {
+      apiVersion.value = data.version;
+    } else {
+      apiVersionError.value =
+        "当前 API 版本较旧，未提供版本信息接口。推荐后续升级到最新版本以获得完整的版本检测能力（不影响当前使用）。";
+    }
+  } catch (e) {
+    apiVersionError.value = (e as Error).message || "获取接口版本失败";
+  }
+}
+
 provide("domainFilter", domainFilter);
 
 onMounted(() => {
   loadDomains();
+  loadVersion();
 });
 
 watch(domainFilter, (value) => {
@@ -248,8 +327,98 @@ function handleLogoutFromActions() {
   closeActions();
   handleLogout();
 }
+
+function openVersionModal() {
+  loadVersion();
+  versionModalVisible.value = true;
+}
+
+function closeVersionModal() {
+  versionModalVisible.value = false;
+}
 </script>
 
 <style scoped lang="less">
 @import "../../styles/layout.less";
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal {
+  background-color: var(--bg-card);
+  border-radius: 10px;
+  width: 420px;
+  max-width: 100%;
+  padding: 20px 20px 18px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.modal-row {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modal-label {
+  flex: 0 0 auto;
+}
+
+.modal-value {
+  flex: 1 1 auto;
+  text-align: right;
+  word-break: break-all;
+}
+
+.modal-status {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.modal-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: var(--primary-color);
+  color: var(--text-inverse);
+}
+
+.modal-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
 </style>
