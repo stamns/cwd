@@ -304,6 +304,7 @@ export class CommentForm extends Component {
 						onBlur: (e) => {
 							if (fieldName === 'email') this.handleEmailBlur(e.target.value);
 						},
+						onKeydown: (e) => this.handleContentKeydown(e),
 					},
 				}),
 				...(error ? [this.createTextElement('span', error, 'cwd-error-text')] : []),

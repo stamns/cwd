@@ -301,7 +301,8 @@ export class ReplyEditor extends Component {
             placeholder,
             value: value || '',
             disabled: this.props.submitting,
-            onInput: (e) => this.handleUserInfoChange(field, e.target.value)
+            onInput: (e) => this.handleUserInfoChange(field, e.target.value),
+            onKeydown: (e) => this.handleTextareaKeydown(e)
           }
         })
       ]
