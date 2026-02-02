@@ -128,6 +128,10 @@ export type FeatureSettingsResponse = {
 	enableArticleLike: boolean;
 };
 
+export type AdminDisplaySettingsResponse = {
+	layoutTitle: string | null;
+};
+
 export async function loginAdmin(name: string, password: string): Promise<string> {
 	const res = await post<AdminLoginResponse>('/admin/login', { name, password });
 	const key = res.data.key;
@@ -325,6 +329,16 @@ export function fetchFeatureSettings(): Promise<FeatureSettingsResponse> {
 
 export function saveFeatureSettings(data: { enableCommentLike?: boolean; enableArticleLike?: boolean }): Promise<{ message: string }> {
 	return put<{ message: string }>('/admin/settings/features', data);
+}
+
+export function fetchAdminDisplaySettings(): Promise<AdminDisplaySettingsResponse> {
+	return get<AdminDisplaySettingsResponse>('/admin/settings/admin-display');
+}
+
+export function saveAdminDisplaySettings(data: {
+	layoutTitle?: string;
+}): Promise<{ message: string }> {
+	return put<{ message: string }>('/admin/settings/admin-display', data);
 }
 
 export type TelegramSettingsResponse = {

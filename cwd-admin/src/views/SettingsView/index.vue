@@ -93,11 +93,7 @@
               </label>
               <div class="tag-input">
                 <div class="tag-input-inner">
-                  <span
-                    v-for="ip in blockedIpTags"
-                    :key="ip"
-                    class="tag-input-tag"
-                  >
+                  <span v-for="ip in blockedIpTags" :key="ip" class="tag-input-tag">
                     <span class="tag-input-tag-text">{{ ip }}</span>
                     <button
                       type="button"
@@ -184,6 +180,33 @@
             <div class="card-actions">
               <button class="card-button" :disabled="savingFeature" @click="saveFeature">
                 <span v-if="savingFeature">保存中...</span>
+                <span v-else>保存</span>
+              </button>
+            </div>
+          </div>
+        </transition>
+      </div>
+
+      <div class="card">
+        <div class="card-header" @click="toggleCard('display')">
+          <div class="card-title">后台显示设置</div>
+          <div class="card-icon" :class="{ expanded: cardsExpanded.display }">▼</div>
+        </div>
+        <transition name="collapse">
+          <div v-show="cardsExpanded.display" class="card-body">
+            <div class="form-item">
+              <label class="form-label">后台标题</label>
+              <input
+                v-model="adminLayoutTitle"
+                class="form-input"
+                type="text"
+                placeholder="CWD 评论系统"
+              />
+              <div class="form-hint">显示在后台顶部导航栏左侧。</div>
+            </div>
+            <div class="card-actions">
+              <button class="card-button" :disabled="savingDisplay" @click="saveDisplay">
+                <span v-if="savingDisplay">保存中...</span>
                 <span v-else>保存</span>
               </button>
             </div>
@@ -422,8 +445,10 @@ import {
   fetchEmailNotifySettings,
   saveEmailNotifySettings,
   sendTestEmail,
-  fetchFeatureSettings,
-  saveFeatureSettings,
+        fetchFeatureSettings,
+        saveFeatureSettings,
+        fetchAdminDisplaySettings,
+        saveAdminDisplaySettings,
   fetchTelegramSettings,
   saveTelegramSettings,
   setupTelegramWebhook,
@@ -510,6 +535,7 @@ const commentAdminEmail = ref("");
 const commentAdminBadge = ref("");
 const avatarPrefix = ref("");
 const commentAdminEnabled = ref(false);
+const adminLayoutTitle = ref("CWD 评论系统");
 const allowedDomainTags = ref<string[]>([]);
 const allowedDomainInput = ref("");
 const blockedIpTags = ref<string[]>([]);
@@ -661,6 +687,7 @@ const savingEmail = ref(false);
 const testingEmail = ref(false);
 const savingComment = ref(false);
 const savingFeature = ref(false);
+const savingDisplay = ref(false);
 const loading = ref(false);
 const message = ref("");
 const messageType = ref<"success" | "error">("success");
@@ -674,12 +701,18 @@ function loadCardsExpanded() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      return {
+        comment: parsed.comment ?? true,
+        display: parsed.display ?? false,
+        feature: parsed.feature ?? false,
+        email: parsed.email ?? false,
+        telegram: parsed.telegram ?? false,
+      };
     }
   } catch {
-    // 忽略错误
   }
-  return { comment: true, feature: false, email: false, telegram: false };
+  return { comment: true, display: false, feature: false, email: false, telegram: false };
 }
 
 const cardsExpanded = ref(loadCardsExpanded());
@@ -731,11 +764,12 @@ function resetTemplatesToDefault() {
 async function load() {
   loading.value = true;
   try {
-    const [commentRes, emailNotifyRes, featureRes, telegramRes] = await Promise.all([
+    const [commentRes, emailNotifyRes, featureRes, telegramRes, displayRes] = await Promise.all([
       fetchCommentSettings(),
       fetchEmailNotifySettings(),
       fetchFeatureSettings(),
       fetchTelegramSettings(),
+      fetchAdminDisplaySettings(),
     ]);
     commentAdminEmail.value = commentRes.adminEmail || "";
     commentAdminBadge.value = commentRes.adminBadge ?? "";
@@ -766,6 +800,8 @@ async function load() {
     telegramBotToken.value = telegramRes.botToken || "";
     telegramChatId.value = telegramRes.chatId || "";
     telegramNotifyEnabled.value = telegramRes.notifyEnabled;
+
+    adminLayoutTitle.value = displayRes.layoutTitle || "CWD 评论系统";
 
     if (emailNotifyRes.templates) {
       templateAdmin.value = emailNotifyRes.templates.admin || DEFAULT_ADMIN_TEMPLATE;
@@ -914,6 +950,23 @@ async function saveFeature() {
     messageType.value = "error";
   } finally {
     savingFeature.value = false;
+  }
+}
+
+async function saveDisplay() {
+  savingDisplay.value = true;
+  message.value = "";
+  try {
+    const res = await saveAdminDisplaySettings({
+      layoutTitle: adminLayoutTitle.value,
+    });
+
+    showToast(res.message || "保存成功", "success");
+  } catch (e: any) {
+    message.value = e.message || "保存失败";
+    messageType.value = "error";
+  } finally {
+    savingDisplay.value = false;
   }
 }
 

@@ -9,7 +9,7 @@
       >
         <PhTextIndent :size="20" />
       </button>
-      <div class="layout-title">CWD 评论系统</div>
+      <div class="layout-title">{{ layoutTitle }}</div>
       <div class="layout-actions-wrapper">
         <div class="layout-domain-filter layout-domain-filter-header">
           <select v-model="domainFilter" class="layout-domain-select">
@@ -173,7 +173,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, provide, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { logoutAdmin, fetchDomainList } from "../../api/admin";
+import { logoutAdmin, fetchDomainList, fetchAdminDisplaySettings } from "../../api/admin";
 import { useTheme } from "../../composables/useTheme";
 import packageJson from "../../../package.json";
 
@@ -191,6 +191,7 @@ const apiVersion = ref("");
 const checkedApiBaseUrl = ref("");
 const apiVersionError = ref("");
 const versionModalVisible = ref(false);
+const layoutTitle = ref("CWD 评论系统");
 
 const themeTitle = computed(() => {
   if (theme.value === "light") return "明亮模式";
@@ -254,11 +255,21 @@ async function loadVersion() {
   }
 }
 
+async function loadDisplaySettings() {
+  try {
+    const res = await fetchAdminDisplaySettings();
+    layoutTitle.value = res.layoutTitle || "CWD 评论系统";
+  } catch {
+    layoutTitle.value = "CWD 评论系统";
+  }
+}
+
 provide("domainFilter", domainFilter);
 
 onMounted(() => {
   loadDomains();
   loadVersion();
+  loadDisplaySettings();
 });
 
 watch(domainFilter, (value) => {
