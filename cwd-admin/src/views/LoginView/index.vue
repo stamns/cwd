@@ -1,47 +1,55 @@
 <template>
   <div class="login-page">
-    <div class="login-card">
-      <img class="login-icon" src="https://cwd.js.org/icon.png" alt="icon" />
-      <div class="login-subtitle">
-        <h1 class="login-title">CWD</h1>
-        - 简洁的自托管评论系统管理面板
-      </div>
-      <form class="login-form" @submit.prevent="handleSubmit">
-        <div class="form-item">
-          <label class="form-label">API 地址</label>
-          <input v-model="apiBaseUrl" class="form-input" type="text" />
+    <div class="login-container">
+      <div class="login-card">
+        <img class="login-icon" src="https://cwd.js.org/icon.png" alt="icon" />
+        <div class="login-subtitle">
+          <h1 class="login-title">CWD</h1>
+          - 简洁的自托管评论系统管理面板
         </div>
-        <div class="form-item">
-          <label class="form-label">管理员账号</label>
-          <input v-model="name" class="form-input" type="text" autocomplete="username" />
-        </div>
-        <div class="form-item">
-          <label class="form-label">密码</label>
-          <div class="form-input-wrapper">
-            <input
-              v-model="password"
-              class="form-input"
-              :type="showPassword ? 'text' : 'password'"
-              autocomplete="current-password"
-            />
-            <button
-              type="button"
-              class="password-toggle"
-              :aria-label="showPassword ? '隐藏密码' : '显示密码'"
-              @click="showPassword = !showPassword"
-            >
-              <PhEye v-if="!showPassword" :size="16" />
-              <PhEyeSlash v-else :size="16" />
-            </button>
+        <form class="login-form" @submit.prevent="handleSubmit">
+          <div class="form-item">
+            <label class="form-label">API 地址</label>
+            <input v-model="apiBaseUrl" class="form-input" type="text" />
           </div>
-        </div>
-        <div v-if="error" class="form-error">{{ error }}</div>
-        <button class="form-button" type="submit" :disabled="submitting">
-          <span v-if="submitting">登录中...</span>
-          <span v-else>登录</span>
-        </button>
-      </form>
+          <div class="form-item">
+            <label class="form-label">管理员账号</label>
+            <input
+              v-model="name"
+              class="form-input"
+              type="text"
+              autocomplete="username"
+            />
+          </div>
+          <div class="form-item">
+            <label class="form-label">密码</label>
+            <div class="form-input-wrapper">
+              <input
+                v-model="password"
+                class="form-input"
+                :type="showPassword ? 'text' : 'password'"
+                autocomplete="current-password"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+                @click="showPassword = !showPassword"
+              >
+                <PhEye v-if="!showPassword" :size="16" />
+                <PhEyeSlash v-else :size="16" />
+              </button>
+            </div>
+          </div>
+          <div v-if="error" class="form-error">{{ error }}</div>
+          <button class="form-button" type="submit" :disabled="submitting">
+            <span v-if="submitting">登录中...</span>
+            <span v-else>登录</span>
+          </button>
+        </form>
+      </div>
     </div>
+    <div class="login-bg"></div>
   </div>
 </template>
 
